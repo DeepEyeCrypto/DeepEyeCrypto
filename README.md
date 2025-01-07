@@ -22,7 +22,7 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 pkg update -y && pkg upgrade -y
 pkg install git -y
 git clone https://github.com/DeepEyeCrypto/One-click-xfce-desktop-X11.git
-cd xfce-macos-setup.sh
+cd One-click-xfce-desktop-X11
 ```
 
 ---
