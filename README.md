@@ -23,8 +23,16 @@ pkg update -y && pkg upgrade -y
 pkg install git -y
 git clone https://github.com/DeepEyeCrypto/One-click-xfce-desktop-X11.git
 cd One-click-xfce-desktop-X11
-```
+chmod +x xfce-macos-setup.sh
+./setup.sh
 
+```
+# **Launch XFCE Desktop
+Open the Termux X11 App, then run:
+
+```bash
+xfce
+```
 ---
 
 # **2. TROUBLESHOOTING.md**
@@ -46,3 +54,5 @@ This guide will help you resolve common issues while setting up **XFCE Desktop w
 termux-x11 :1 &
 export DISPLAY=:1
 startxfce4
+
+```
