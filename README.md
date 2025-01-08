@@ -24,7 +24,7 @@ pkg install git -y
 git clone https://github.com/DeepEyeCrypto/One-click-xfce-desktop-X11.git
 cd One-click-xfce-desktop-X11
 chmod +x xfce-macos-setup.sh
-./xfce-macos-setup.sh
+bash ~/xfce-macos-setup.sh
 
 ```
 # **Launch XFCE Desktop
