@@ -100,8 +100,13 @@ Comment=Start Plank dock" > ~/.config/autostart/plank.desktop
     # Start DeepEyeCrypto Service
     if [ -f "./DeepEyeCrypto.sh" ]; then
         chmod +x ./DeepEyeCrypto.sh
+        echo "Starting DeepEyeCrypto Service..."
         ./DeepEyeCrypto.sh start
-        echo "DeepEyeCrypto service started successfully!"
+        if [ $? -eq 0 ]; then
+            echo "DeepEyeCrypto service started successfully!"
+        else
+            echo "Failed to start DeepEyeCrypto service. Check the script for errors."
+        fi
     else
         echo "DeepEyeCrypto.sh not found. Skipping DeepEyeCrypto service startup."
     fi
@@ -126,8 +131,13 @@ Comment=Start Plank dock" > ~/.config/autostart/plank.desktop
 
     # Stop DeepEyeCrypto Service
     if [ -f "./DeepEyeCrypto.sh" ]; then
+        echo "Stopping DeepEyeCrypto Service..."
         ./DeepEyeCrypto.sh stop
-        echo "DeepEyeCrypto service stopped successfully!"
+        if [ $? -eq 0 ]; then
+            echo "DeepEyeCrypto service stopped successfully!"
+        else
+            echo "Failed to stop DeepEyeCrypto service. Check the script for errors."
+        fi
     else
         echo "DeepEyeCrypto.sh not found. Skipping DeepEyeCrypto service shutdown."
     fi
