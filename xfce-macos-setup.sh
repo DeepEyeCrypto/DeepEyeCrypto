@@ -1,121 +1,67 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 
-# -------------------------------
-# One-Click XFCE macOS Themed Setup for Termux with DPMS Support
-# -------------------------------
-
-# Step 1: Storage Permissions
-echo "[+] Setting up Termux storage access..."
-termux-setup-storage
-
-# Step 2: Update and Upgrade Packages
-echo "[+] Updating and upgrading packages..."
+# Step 1: Install Required Packages (if not already installed)
 pkg update -y && pkg upgrade -y
+pkg install -y x11-repo pulseaudio termux-x11 xfce4 dbus xfce4-session xfce4-terminal xfce4-panel xfce4-whiskermenu-plugin wget unzip git
 
-# Step 3: Install Required Repositories and Packages
-echo "[+] Installing necessary repositories and packages..."
-pkg install x11-repo -y
-pkg install termux-x11-nightly pulseaudio xfce4 firefox git gtk3 xfconf plank x11-xserver-utils x11-utils -y
+# Step 2: Kill Existing X11 and PulseAudio Processes
+kill -9 $(pgrep -f "termux.x11") 2>/dev/null
+kill -9 $(pgrep -f "pulseaudio") 2>/dev/null
 
-# Step 4: Start X11 Server
-echo "[+] Starting X11 server..."
-termux-x11 :1 &
+# Step 3: Set Permissions for X11 and Temporary Directories
+chmod 1777 /tmp
+export XDG_RUNTIME_DIR=${TMPDIR}
 
-# Wait for X11 to Initialize
-sleep 2
+# Step 4: Start PulseAudio Server
+pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1
 
-# Set DISPLAY Variable
-export DISPLAY=:1
+# Step 5: Start Termux-X11 Session
+termux-x11 :0 >/dev/null &
+sleep 3  # Wait for X11 to initialize
 
-# Step 5: Enable DPMS (Display Power Management Signaling)
-echo "[+] Configuring DPMS..."
-mkdir -p ~/.config/x11
-echo 'Section "Extensions"
-    Option "DPMS" "Enable"
-EndSection
-Section "ServerFlags"
-    Option "BlankTime" "10"
-    Option "StandbyTime" "20"
-    Option "SuspendTime" "30"
-    Option "OffTime" "60"
-EndSection' > ~/.config/x11/xorg.conf
+# Step 6: Start Termux X11 Main Activity
+am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+sleep 1
 
-# Restart X11 Server with DPMS Support
-echo "[+] Restarting X11 server with DPMS enabled..."
-xset +dpms
-xset dpms 0 0 600
+# Step 7: Set Audio Server Environment Variable
+export PULSE_SERVER=127.0.0.1
 
-# Verify DPMS Configuration
-if xset q | grep -q "DPMS"; then
-    echo "[+] DPMS enabled successfully."
-else
-    echo "[!] Warning: DPMS is not enabled. Please check X11 logs."
-fi
-
-# Step 6: Start PulseAudio for Sound
-echo "[+] Starting PulseAudio..."
-pulseaudio --start
-
-# Step 7: Install macOS Theme and Icons
-echo "[+] Installing macOS theme and icons..."
-
-# Create necessary directories
+# Step 8: Install macOS Theme and Icons
 mkdir -p ~/.themes ~/.icons
 
-# Install WhiteSur GTK Theme
-if [ ! -d "$HOME/WhiteSur-gtk-theme" ]; then
-    git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git ~/WhiteSur-gtk-theme
-    cd ~/WhiteSur-gtk-theme
-    ./install.sh
-    cd ~
-else
-    echo "[+] WhiteSur GTK Theme already installed."
-fi
+# Download macOS Theme
+echo "[+] Downloading macOS Theme..."
+wget -O /tmp/Mojave-gtk-theme.zip https://github.com/vinceliuice/Mojave-gtk-theme/archive/refs/heads/master.zip
+unzip /tmp/Mojave-gtk-theme.zip -d /tmp/
+cd /tmp/Mojave-gtk-theme-master
+./install.sh --dest ~/.themes
 
-# Install WhiteSur Icon Theme
-if [ ! -d "$HOME/WhiteSur-icon-theme" ]; then
-    git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git ~/WhiteSur-icon-theme
-    cd ~/WhiteSur-icon-theme
-    ./install.sh
-    cd ~
-else
-    echo "[+] WhiteSur Icon Theme already installed."
-fi
+# Download macOS Icons
+echo "[+] Downloading macOS Icons..."
+wget -O /tmp/McMojave-circle-icons.zip https://github.com/vinceliuice/McMojave-circle/archive/refs/heads/master.zip
+unzip /tmp/McMojave-circle-icons.zip -d /tmp/
+cd /tmp/McMojave-circle-master
+./install.sh --dest ~/.icons
 
-# Apply Themes
-echo "[+] Applying macOS theme and icons..."
-xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-dark"
-xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur-dark"
+# Set Theme and Icons using XFCE4 Settings
+xfconf-query -c xsettings -p /Net/ThemeName -s "Mojave-dark"
+xfconf-query -c xsettings -p /Net/IconThemeName -s "McMojave-circle"
 
-# Step 8: Set Up Plank Dock
-echo "[+] Configuring Plank dock..."
-mkdir -p ~/.config/autostart
-echo "[Desktop Entry]
-Type=Application
-Exec=plank
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name=Plank
-Comment=Plank Dock" > ~/.config/autostart/plank.desktop
+# Configure XFCE4 Panel Layout for macOS-like Dock
+xfce4-panel-profiles load /tmp/MacOS-like-panel.tar.gz
 
-# Step 9: Add XFCE Alias to .bashrc
-echo "[+] Adding XFCE alias to .bashrc..."
-if ! grep -q 'alias xfce="~/xfce-macos-setup.sh"' ~/.bashrc; then
-    echo 'alias xfce="~/xfce-macos-setup.sh"' >> ~/.bashrc
-    source ~/.bashrc
-    echo "[+] Alias added successfully!"
-else
-    echo "[+] Alias already exists in .bashrc"
-fi
+# Clean up temp files
+rm -rf /tmp/Mojave-gtk-theme* /tmp/McMojave-circle*
 
-# Step 10: Launch XFCE Desktop
-echo "[+] Launching XFCE Desktop..."
-startxfce4 &
+# Step 9: Launch XFCE4 Desktop Environment
+env DISPLAY=:0 dbus-launch --exit-with-session startxfce4 > /dev/null 2>&1 &
 
-# Step 11: Launch Plank Dock
-echo "[+] Starting Plank dock..."
-plank &
+# Step 10: Finalize and Exit
+echo "[+] XFCE4 Desktop environment with macOS theme is starting on Termux X11."
+echo "[+] Making the script executable and running it again if necessary."
 
-# Final Verification
-echo "[+] Setup Complete! Open the Termux X11 app to access XFCE Desktop."
+# Make the script executable and run it again if needed
+chmod +x xfce4_macos.sh
+./xfce4_macos.sh
+
+exit 0
