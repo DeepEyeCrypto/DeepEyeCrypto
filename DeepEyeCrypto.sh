@@ -1,74 +1,54 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Initial Setup and Package Installation
-termux-setup-storage
-
-# Update and Install Required Packages
-pkg update -y
-pkg upgrade -y
-pkg install x11-repo -y
-pkg install termux-x11-nightly -y
-pkg install pulseaudio -y
-pkg install wget -y
-pkg install xfce4 -y
-pkg install tur-repo -y
-pkg install firefox -y
-pkg install proot-distro -y
-pkg install git -y
-pkg install unzip -y
-pkg install plank -y
-
-# Kill existing termux.x11 processes
-pkill -f "termux.x11" 2>/dev/null
+# Kill open X11 processes
+kill -9 $(pgrep -f "termux.x11") 2>/dev/null
 
 # Enable PulseAudio over Network
-pulseaudio --start \
-    --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" \
-    --exit-idle-time=-1
+pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1
 
 # Prepare termux-x11 session
 export XDG_RUNTIME_DIR=${TMPDIR}
-termux-x11 :0 >/dev/null 2>&1 &
+termux-x11 :0 >/dev/null &
 
-# Wait for termux-x11 to initialize
+# Wait until termux-x11 starts
 sleep 3
 
-# Launch Termux X11 Main Activity
-am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity >/dev/null 2>&1
+# Launch Termux X11 main activity
+am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
 sleep 1
 
-# Set PulseAudio server address
+# Set audio server
 export PULSE_SERVER=127.0.0.1
 
-# Start XFCE4 Desktop Environment
-env DISPLAY=:0 dbus-launch --exit-with-session xfce4-session >/dev/null 2>&1 &
+# Install Required Packages
+pkg update && pkg upgrade -y
+pkg install git wget gtk2 gtk3 xfce4-settings plank -y
 
-# Install macOS Theme and Icons
-mkdir -p ~/.themes ~/.icons
-
-# macOS Theme
-git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git ~/WhiteSur-gtk-theme
-cd ~/WhiteSur-gtk-theme
+# Download and Install macOS Theme
+git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git
+cd WhiteSur-gtk-theme
 ./install.sh
+cd ..
 
-# macOS Icons
-git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git ~/WhiteSur-icon-theme
-cd ~/WhiteSur-icon-theme
+# Download and Install macOS Icon Theme
+git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git
+cd WhiteSur-icon-theme
 ./install.sh
+cd ..
 
-# macOS Wallpapers
-mkdir -p ~/.local/share/backgrounds/macos
-cd ~/.local/share/backgrounds/macos
-wget https://wallpapercave.com/wp/wp8696495.jpg -O macos-wallpaper.jpg
+# Download macOS Wallpapers
+git clone https://github.com/joeyhoer/macOS-Wallpapers.git
+mkdir -p ~/.wallpapers
+cp macOS-Wallpapers/* ~/.wallpapers/
 
-# Apply XFCE4 Theme and Icons (via xfconf)
-xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-dark"
+# Set XFCE4 Appearance and Icons
+xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur"
 xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
 
-# Set Wallpaper
-xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s ~/.local/share/backgrounds/macos/macos-wallpaper.jpg
+# Set macOS Wallpaper
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "~/.wallpapers/macos-default.jpg"
 
-# Configure Plank Dock
+# Enable macOS Dock
 mkdir -p ~/.config/autostart
 echo "[Desktop Entry]
 Type=Application
@@ -76,13 +56,12 @@ Exec=plank
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
-Name=Plank Dock
-Comment=Start Plank Dock on XFCE startup" > ~/.config/autostart/plank.desktop
+Name=Plank
+Comment=Start Plank dock" > ~/.config/autostart/plank.desktop
 
-# Start Plank immediately
 plank &
 
-# Restart XFCE4 for Changes to Apply
-xfce4-session-logout --logout
+# Run XFCE4 Desktop
+env DISPLAY=:0 dbus-launch --exit-with-session xfce4-session & > /dev/null 2>&1
 
 exit 0
