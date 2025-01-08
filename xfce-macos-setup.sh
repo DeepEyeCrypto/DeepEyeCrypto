@@ -16,11 +16,17 @@ pkg install proot-distro -y
 pkg install git -y
 
 # Run XFCE macOS Setup Script
+if [[ ! -f "./xfce-macos-setup.sh" ]]; then
+    echo "xfce-macos-setup.sh not found. Attempting to download..."
+    wget -O xfce-macos-setup.sh <URL_TO_THE_SCRIPT>
+    chmod +x xfce-macos-setup.sh
+fi
+
 if [[ -f "./xfce-macos-setup.sh" ]]; then
-    chmod +x ./xfce-macos-setup.sh
     ./xfce-macos-setup.sh
 else
-    echo "Error: ./xfce-macos-setup.sh not found. Skipping setup script."
+    echo "Error: Failed to locate or download xfce-macos-setup.sh"
+    exit 1
 fi
 
 # Kill existing termux.x11 processes
