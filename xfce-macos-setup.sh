@@ -15,7 +15,7 @@ pkg update -y && pkg upgrade -y
 # Step 3: Install Required Repositories and Packages
 echo "[+] Installing necessary repositories and packages..."
 pkg install x11-repo -y
-pkg install termux-x11-nightly pulseaudio xfce4 firefox git gtk3 xfconf plank x11-xserver-utils -y
+pkg install termux-x11-nightly pulseaudio xfce4 firefox git gtk3 xfconf plank x11-xserver-utils x11-utils -y
 
 # Step 4: Start X11 Server
 echo "[+] Starting X11 server..."
@@ -28,11 +28,24 @@ sleep 2
 export DISPLAY=:1
 
 # Step 5: Enable DPMS (Display Power Management Signaling)
-echo "[+] Enabling DPMS..."
+echo "[+] Configuring DPMS..."
+mkdir -p ~/.config/x11
+echo 'Section "Extensions"
+    Option "DPMS" "Enable"
+EndSection
+Section "ServerFlags"
+    Option "BlankTime" "10"
+    Option "StandbyTime" "20"
+    Option "SuspendTime" "30"
+    Option "OffTime" "60"
+EndSection' > ~/.config/x11/xorg.conf
+
+# Restart X11 Server with DPMS Support
+echo "[+] Restarting X11 server with DPMS enabled..."
 xset +dpms
 xset dpms 0 0 600
 
-# Verify DPMS
+# Verify DPMS Configuration
 if xset q | grep -q "DPMS"; then
     echo "[+] DPMS enabled successfully."
 else
