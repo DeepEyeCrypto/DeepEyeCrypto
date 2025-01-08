@@ -77,7 +77,7 @@ echo "[+] XFCE4 Desktop environment with macOS theme is starting on Termux X11."
 echo "[+] Making the script executable and running it again if necessary."
 
 # Make the script executable and run it again if needed
-chmod +x xfce4_macos.sh
-./xfce4_macos.sh
+chmod +x xfce-macos-setup.sh
+./xfce-macos-setup.sh
 
 exit 0
