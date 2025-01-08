@@ -1,9 +1,7 @@
 # One-click-xfce-desktop-X11
 
 # 🖥️ One-Click XFCE Desktop X11 for Termux
-git add README.md
-git commit -m "Screenshot_20250108-205306.png"
-git push origin main
+![Mac OS theme](Screenshot_20250108-205306.png)
 ### 🚀 **Easily set up and launch an XFCE desktop environment with X11 on Termux in one command!**
 
 This script automates the installation of **XFCE desktop**, **X11 server**, **PulseAudio**, and a **macOS-inspired theme**, providing a ready-to-use desktop environment on your Android device.
