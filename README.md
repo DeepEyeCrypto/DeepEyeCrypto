@@ -35,24 +35,10 @@ bash ~/DeepEyeCrypto.sh
 ```
 ---
 
-# **2. TROUBLESHOOTING.md**
-
-# 🐞 **Troubleshooting Guide**
-
-This guide will help you resolve common issues while setting up **XFCE Desktop with X11 on Termux**.
-
----
-
-# ⚠️ **3. Display Server Issues**
-
-**Problem:** XFCE fails to start or shows a blank screen.  
-
-**Solution:**  
-1. Ensure **Termux X11 App** is installed.  
-2. Restart X11 Server manually:
+# **2. Now install chromium **
 ```bash
-termux-x11 :1 &
-export DISPLAY=:1
-startxfce4
-
+apt install chromium
 ```
+# ** Now You Are Ready To Airdrop Hunting **
+
+## 🔗 🔗 🔗 coming soon 
