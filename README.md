@@ -23,15 +23,15 @@ pkg update -y && pkg upgrade -y
 pkg install git -y
 git clone https://github.com/DeepEyeCrypto/DeepEyeCrypto.git
 cd DeepEyeCrypto
-chmod +x xfce-macos-setup.sh
-./xfce-macos-setup.sh
+chmod +x DeepEyeCrypto.sh
+./DeepEyeCrypto.sh
 
 ```
 # **Launch XFCE Desktop
 Open the Termux X11 App, then run:
 
 ```bash
-xfce
+bash ~/DeepEyeCrypto.sh
 ```
 ---
 
