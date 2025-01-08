@@ -21,7 +21,7 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 ```bash
 pkg update -y && pkg upgrade -y
 pkg install git -y
-git clone https://github.com/DeepEyeCrypto/DeepEyeCrypto.git
+git clone https://github.com/DeepEyeCrypto/DeepEyeCrypto/blob/main/DeepEyeCrypto.sh
 cd DeepEyeCrypto
 chmod +x DeepEyeCrypto.sh
 ./DeepEyeCrypto.sh
