@@ -5,6 +5,7 @@ termux-setup-storage
 
 # Update and Install Required Packages
 pkg update -y
+pkg upgrade -y
 pkg install x11-repo -y
 pkg install termux-x11-nightly -y
 pkg install pulseaudio -y
@@ -14,6 +15,8 @@ pkg install tur-repo -y
 pkg install firefox -y
 pkg install proot-distro -y
 pkg install git -y
+pkg install unzip -y
+pkg install plank -y
 
 # Kill existing termux.x11 processes
 pkill -f "termux.x11" 2>/dev/null
@@ -39,5 +42,47 @@ export PULSE_SERVER=127.0.0.1
 
 # Start XFCE4 Desktop Environment
 env DISPLAY=:0 dbus-launch --exit-with-session xfce4-session >/dev/null 2>&1 &
+
+# Install macOS Theme and Icons
+mkdir -p ~/.themes ~/.icons
+
+# macOS Theme
+git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git ~/WhiteSur-gtk-theme
+cd ~/WhiteSur-gtk-theme
+./install.sh
+
+# macOS Icons
+git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git ~/WhiteSur-icon-theme
+cd ~/WhiteSur-icon-theme
+./install.sh
+
+# macOS Wallpapers
+mkdir -p ~/.local/share/backgrounds/macos
+cd ~/.local/share/backgrounds/macos
+wget https://wallpapercave.com/wp/wp8696495.jpg -O macos-wallpaper.jpg
+
+# Apply XFCE4 Theme and Icons (via xfconf)
+xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-dark"
+xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
+
+# Set Wallpaper
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s ~/.local/share/backgrounds/macos/macos-wallpaper.jpg
+
+# Configure Plank Dock
+mkdir -p ~/.config/autostart
+echo "[Desktop Entry]
+Type=Application
+Exec=plank
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Plank Dock
+Comment=Start Plank Dock on XFCE startup" > ~/.config/autostart/plank.desktop
+
+# Start Plank immediately
+plank &
+
+# Restart XFCE4 for Changes to Apply
+xfce4-session-logout --logout
 
 exit 0
