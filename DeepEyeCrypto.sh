@@ -41,12 +41,45 @@ case "$1" in
     # Set audio server
     export PULSE_SERVER=127.0.0.1
 
+    # Install macOS Themes and Icons
+    echo "Installing macOS Themes and Icons..."
+    git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git
+    cd WhiteSur-gtk-theme
+    ./install.sh
+    cd ..
+
+    git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git
+    cd WhiteSur-icon-theme
+    ./install.sh
+    cd ..
+
+    # Install macOS Wallpapers
+    echo "Installing macOS Wallpapers..."
+    git clone https://github.com/joeyhoer/macOS-Wallpapers.git
+    mkdir -p ~/.wallpapers
+    cp macOS-Wallpapers/* ~/.wallpapers/
+
     # Apply macOS Theme and Icons
     xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur"
     xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
 
-    # Set macOS Wallpaper
-    xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "~/.wallpapers/macos-default.jpg"
+    # Set Multiple macOS Wallpapers
+    echo "Configuring Multiple Wallpapers..."
+    WALLPAPER_DIR="$HOME/.wallpapers"
+    WALLPAPER_FILES=($(ls $WALLPAPER_DIR/*.jpg $WALLPAPER_DIR/*.png 2>/dev/null))
+
+    if [ ${#WALLPAPER_FILES[@]} -gt 0 ]; then
+        xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "${WALLPAPER_FILES[0]}"
+        xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/image-style -s 5  # Scaled wallpaper
+        xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/image-show -s true
+
+        echo "Enabling Wallpaper Slideshow..."
+        xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/slideshow-enabled -s true
+        xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/slideshow-directory -s "$WALLPAPER_DIR"
+        xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/slideshow-delay -s 300 # 5-minute delay
+    else
+        echo "No wallpapers found in $WALLPAPER_DIR"
+    fi
 
     # Enable macOS Dock
     mkdir -p ~/.config/autostart
@@ -64,7 +97,16 @@ Comment=Start Plank dock" > ~/.config/autostart/plank.desktop
     # Run XFCE4 Desktop
     env DISPLAY=:0 dbus-launch --exit-with-session xfce4-session & > /dev/null 2>&1
 
-    echo "XFCE4 with macOS theme started successfully!"
+    # Start DeepEyeCrypto Service
+    if [ -f "./DeepEyeCrypto.sh" ]; then
+        chmod +x ./DeepEyeCrypto.sh
+        ./DeepEyeCrypto.sh start
+        echo "DeepEyeCrypto service started successfully!"
+    else
+        echo "DeepEyeCrypto.sh not found. Skipping DeepEyeCrypto service startup."
+    fi
+
+    echo "XFCE4 with macOS themes, icons, and multiple wallpapers started successfully!"
     ;;
 
   stop)
@@ -81,6 +123,14 @@ Comment=Start Plank dock" > ~/.config/autostart/plank.desktop
 
     # Stop Plank Dock
     pkill plank
+
+    # Stop DeepEyeCrypto Service
+    if [ -f "./DeepEyeCrypto.sh" ]; then
+        ./DeepEyeCrypto.sh stop
+        echo "DeepEyeCrypto service stopped successfully!"
+    else
+        echo "DeepEyeCrypto.sh not found. Skipping DeepEyeCrypto service shutdown."
+    fi
 
     echo "XFCE4 and related services stopped successfully!"
     ;;
