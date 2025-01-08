@@ -15,6 +15,14 @@ pkg install firefox -y
 pkg install proot-distro -y
 pkg install git -y
 
+# Run XFCE macOS Setup Script
+if [[ -f "./xfce-macos-setup.sh" ]]; then
+    chmod +x ./xfce-macos-setup.sh
+    ./xfce-macos-setup.sh
+else
+    echo "Error: ./xfce-macos-setup.sh not found. Skipping setup script."
+fi
+
 # Kill existing termux.x11 processes
 pkill -f "termux.x11" 2>/dev/null
 
