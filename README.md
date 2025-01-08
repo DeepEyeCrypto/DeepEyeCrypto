@@ -28,13 +28,16 @@ chmod +x DeepEyeCrypto.sh
 
 ```
 # **Launch XFCE Desktop
-Open the Termux X11 App, then run:
+# ** START**
 
 ```bash
-bash ~/DeepEyeCrypto.sh
+./DeepEyeCrypto.sh start
 ```
 ---
-
+# ** STOP **
+```bash
+./DeepEyeCrypto.sh stop
+```
 # **2. Now install chromium **
 ```bash
 apt install chromium
