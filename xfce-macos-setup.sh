@@ -80,8 +80,8 @@ env DISPLAY=:0 dbus-launch --exit-with-session startxfce4 > /dev/null 2>&1 &
 # Step 11: Self-Execution if Required
 if [[ "$0" != "./xfce4-macos-full-setup.sh" ]]; then
     echo "[+] Re-executing the script to ensure proper initialization..."
-    chmod +x xfce4-macos-full-setup.sh
-    ./xfce4-macos-full-setup.sh
+    chmod +x xfce-macos-setup.sh
+    ./xfce-macos-setup.sh
 fi
 
 # Step 12: Finalize
