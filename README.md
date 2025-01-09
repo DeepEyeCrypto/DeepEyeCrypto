@@ -40,6 +40,7 @@ chmod +x DeepEyeCrypto.sh
 ```
 # **2. Now install chromium **
 ```bash
+apt update && apt upgrade -y
 apt install chromium -y
 ```
 # ** Now You Are Ready To Airdrop Hunting **
