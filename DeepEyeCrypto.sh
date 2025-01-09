@@ -1,19 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Set up storage access
-termux-setup-storage
-
-# Update packages and install necessary dependencies
-pkg update -y
-pkg install x11-repo -y
-pkg install termux-x11-nightly -y
-pkg install pulseaudio -y
-pkg install wget -y
-pkg install xfce4 -y
-pkg install tur-repo -y
-pkg install firefox -y
-pkg install git -y
-
 # Kill open X11 processes
 kill -9 $(pgrep -f "termux.x11") 2>/dev/null
 
@@ -24,7 +10,7 @@ pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth
 export XDG_RUNTIME_DIR=${TMPDIR}
 termux-x11 :0 >/dev/null &
 
-# Wait a bit until termux-x11 gets started.
+# Wait a bit until termux-x11 gets started
 sleep 3
 
 # Launch Termux X11 main activity
@@ -34,25 +20,31 @@ sleep 1
 # Set audio server
 export PULSE_SERVER=127.0.0.1
 
+# Install required packages
+pkg update && pkg upgrade -y
+pkg install git wget xfce4-settings figlet toilet lolcat
+
+# Display enhanced terminal banner
+clear
+echo -e "\e[1;32mStarting DeepEyeCrypto Desktop Environment...\e[0m" | lolcat
+figlet -c -f big "DeepEyeCrypto" | lolcat
+
+echo -e "\nWelcome to your secure, stylish, and powerful XFCE4 workspace!" | lolcat
+echo -e "Stay productive, stay inspired.\n" | lolcat
+
+# Download and install WhiteSur theme
+if [ ! -d "$HOME/WhiteSur-gtk-theme" ]; then
+  git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git $HOME/WhiteSur-gtk-theme
+fi
+cd $HOME/WhiteSur-gtk-theme
+./install.sh --icon --cursor
+
+# Apply WhiteSur theme
+xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur"
+xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
+xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur"
+
 # Run XFCE4 Desktop
 env DISPLAY=:0 dbus-launch --exit-with-session xfce4-session & > /dev/null 2>&1
 
-# Clone macOS GTK theme
-git clone https://github.com/vinceliuice/macOS.git
-
-# Install macOS theme
-cd macOS
-./install.sh
-
-# Apply macOS GTK theme globally
-xfconf-query --channel xsettings --property /Net/ThemeName --set "macOS"
-
-# Set icons and cursor for macOS look (optional)
-xfconf-query --channel xsettings --property /Net/IconThemeName --set "macOS"
-xfconf-query --channel xsettings --property /Gtk/CursorThemeName --set "macOS"
-
-# Launch the macOS dock (optional)
-plank &
-
-# Exit script
 exit 0
