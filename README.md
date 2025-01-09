@@ -14,7 +14,7 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 - 🎨 **macOS Theme:** Applies WhiteSur GTK and icon themes.
 - 🛠️ **Alias Support:** Quick launch with a single command.
 - 📊 **Lightweight:** Optimized for Android's limited resources.
-## Prerequisites
+# Prerequisites
 - Install [Termux](https://termux.dev/) on your Android device.
 - Install [Termux-X11](https://github.com/termux/termux-x11) for graphical support.
 ---
@@ -57,7 +57,7 @@ This project provides a script to automate the installation of Ubuntu with a gra
 - X11 support using Termux-X11 or VNC.
 - Supports arm64 architecture.
 
-## Prerequisites
+# Prerequisites
 - Install [Termux](https://termux.dev/) on your Android device.
 - Install [Termux-X11](https://github.com/termux/termux-x11) for graphical support.
 
