@@ -1,5 +1,18 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
+# Setup Termux storage and update packages
+termux-setup-storage
+pkg update -y
+pkg install x11-repo -y
+pkg install termux-x11-nightly -y
+pkg install pulseaudio -y
+pkg install wget -y
+pkg install xfce4 -y
+pkg install tur-repo -y
+pkg install firefox -y
+pkg install git -y
+pkg install figlet toilet lolcat -y
+
 # Kill open X11 processes
 kill -9 $(pgrep -f "termux.x11") 2>/dev/null
 
@@ -19,10 +32,6 @@ sleep 1
 
 # Set audio server
 export PULSE_SERVER=127.0.0.1
-
-# Install required packages
-pkg update && pkg upgrade -y
-pkg install git wget xfce4-settings figlet toilet lolcat
 
 # Display enhanced terminal banner
 clear
