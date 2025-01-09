@@ -14,7 +14,9 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 - 🎨 **macOS Theme:** Applies WhiteSur GTK and icon themes.
 - 🛠️ **Alias Support:** Quick launch with a single command.
 - 📊 **Lightweight:** Optimized for Android's limited resources.
-
+## Prerequisites
+- Install [Termux](https://termux.dev/) on your Android device.
+- Install [Termux-X11](https://github.com/termux/termux-x11) for graphical support.
 ---
 
 # **1. Clone the Repository**
@@ -45,4 +47,32 @@ apt install chromium -y
 ```
 # ** Now You Are Ready To Airdrop Hunting **
 
-## 🔗 🔗 🔗 coming soon 
+# Ubuntu Proot on Termux with X11 Support
+
+This project provides a script to automate the installation of Ubuntu with a graphical desktop environment (XFCE4) in Termux, supporting X11 or VNC for GUI applications.
+
+## Features
+- Fully automated installation of Ubuntu (default: 22.04).
+- Lightweight XFCE4 desktop environment pre-installed.
+- X11 support using Termux-X11 or VNC.
+- Supports arm64 architecture.
+
+## Prerequisites
+- Install [Termux](https://termux.dev/) on your Android device.
+- Install [Termux-X11](https://github.com/termux/termux-x11) for graphical support.
+
+## Installation
+1. Clone this repository or download the script directly:
+   ```bash
+   pkg update -y && pkg upgrade -y
+   pkg install git -y
+   git clone https://github.com/DeepEyeCrypto/DeepEyeCrypto.git
+   cd ubuntu-termux-x11
+   chmod +x ubuntu-termux-x11
+   ./ubuntu-termux-x11
+   ```
+   # **START**
+   ```BASH
+   cd ~/ubuntu
+   ./start-ubuntu.sh
+   
