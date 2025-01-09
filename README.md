@@ -15,6 +15,7 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 - 🛠️ **Alias Support:** Quick launch with a single command.
 - 📊 **Lightweight:** Optimized for Android's limited resources.
 # Prerequisites
+# **universal.apk**
 - Install [Termux](https://termux.dev/) on your Android device.
 - Install [Termux-X11](https://github.com/termux/termux-x11) for graphical support.
 ---
@@ -58,6 +59,7 @@ This project provides a script to automate the installation of Ubuntu with a gra
 - Supports arm64 architecture.
 
 # Prerequisites
+# **universal.apk**
 - Install [Termux](https://termux.dev/) on your Android device.
 - Install [Termux-X11](https://github.com/termux/termux-x11) for graphical support.
 
@@ -67,7 +69,7 @@ This project provides a script to automate the installation of Ubuntu with a gra
    pkg update -y && pkg upgrade -y
    pkg install git -y
    git clone https://github.com/DeepEyeCrypto/DeepEyeCrypto.git
-   cd ubuntu-termux-x11
+   cd DeepEyeCrypto
    chmod +x ubuntu-termux-x11
    ./ubuntu-termux-x11
    ```
