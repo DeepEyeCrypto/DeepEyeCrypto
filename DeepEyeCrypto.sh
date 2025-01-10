@@ -13,6 +13,7 @@ pkg install wget -y
 pkg install xfce4 -y
 pkg install tur-repo -y
 pkg install firefox -y
+pkg install chromium -y
 pkg install proot-distro -y
 pkg install git -y
 pkg install unzip -y
