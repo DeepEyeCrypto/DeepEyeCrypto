@@ -18,6 +18,7 @@ pkg install git -y
 pkg install unzip -y
 pkg install plank -y
 pkg install xfce4-appmenu-plugin -y
+pkg install chromium -y
 
 # Kill existing termux.x11 processes
 pkill -f "termux.x11" 2>/dev/null
