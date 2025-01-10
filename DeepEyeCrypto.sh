@@ -57,9 +57,15 @@ git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git ~/WhiteSur-icon
 cd ~/WhiteSur-icon-theme
 ./install.sh
 
-# Set WhiteSur-dark Theme and Icons
+# macOS Cursor (McMojave-cursors)
+git clone https://github.com/darkomarko42/McMojave-cursors.git ~/McMojave-cursors
+cd ~/McMojave-cursors
+./install.sh
+
+# Set WhiteSur-dark Theme, Icons, and Cursor
 xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-dark"
 xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
+xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "McMojave-cursors"
 
 # Install macOS Fonts
 mkdir -p ~/.fonts
@@ -69,8 +75,7 @@ fc-cache -fv
 xfconf-query -c xsettings -p /Gtk/FontName -s "San Francisco 11"
 
 # macOS Wallpapers
-mkdir -p /data/data/.termux/files/usr/share/backgrounds/xfce
-cd /data/data/.termux/files/usr/share/backgrounds/xfce
+cd /data/data/com.termux/files/home
 wget https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg -O big-sur.jpg
 wget https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg -O fusion.jpg
 wget https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg -O sonoma1.jpg
@@ -78,7 +83,7 @@ wget https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpe
 wget https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg -O high-sierra.jpg
 
 # Set Default Wallpaper
-xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s /data/data/.termux/files/usr/share/backgrounds/xfce/big-sur.jpg
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s /data/data/com.termux/files/home/big-sur.jpg
 
 # Configure Plank Dock
 mkdir -p ~/.config/plank/dock1
@@ -118,7 +123,7 @@ xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>Space" -s "
 
 # Optional: Add Wallpaper Rotation
 while true; do
-    for wallpaper in /data/data/.termux/files/usr/share/backgrounds/xfce/*; do
+    for wallpaper in /data/data/com.termux/files/home/*.jpg; do
         xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$wallpaper"
         sleep 3600  # Change every hour
     done
