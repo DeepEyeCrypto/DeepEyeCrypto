@@ -26,9 +26,9 @@ rm ubuntu-rootfs.tar.gz
 
 # Create launch script
 echo "Creating launch script..."
-cat > start-ubuntu.sh << EOF
+cat > start-ubuntu.sh << 'EOF'
 #!/bin/bash
-proot --link2symlink -0 -r $INSTALL_DIR -b /dev -b /proc -b /sys -b /data/data/com.termux/files/home -b /data/data/com.termux/files/usr/tmp:/tmp /usr/bin/env -i HOME=/root TERM="\$TERM" PS1='[ubuntu@termux]# ' PATH=/bin:/usr/bin:/sbin:/usr/sbin /bin/bash --login
+proot --link2symlink -0 -r $INSTALL_DIR -b /dev -b /proc -b /sys -b /data/data/com.termux/files/home -b /data/data/com.termux/files/usr/tmp:/tmp /usr/bin/env -i HOME=/root TERM="$TERM" PS1='[ubuntu@termux]# ' /bin/bash --login
 EOF
 
 chmod +x start-ubuntu.sh
