@@ -57,15 +57,9 @@ git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git ~/WhiteSur-icon
 cd ~/WhiteSur-icon-theme
 ./install.sh
 
-# macOS Cursor (McMojave-cursors)
-git clone https://github.com/darkomarko42/McMojave-cursors.git ~/McMojave-cursors
-cd ~/McMojave-cursors
-./install.sh
-
-# Set WhiteSur-dark Theme, Icons, and Cursor
+# Set WhiteSur-dark Theme and Icons
 xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-dark"
 xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
-xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "McMojave-cursors"
 
 # Install macOS Fonts
 mkdir -p ~/.fonts
