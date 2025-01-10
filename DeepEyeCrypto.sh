@@ -57,16 +57,20 @@ cd ~/WhiteSur-icon-theme
 ./install.sh
 
 # macOS Wallpapers
-mkdir -p ~/.local/share/backgrounds/macos
-cd ~/.local/share/backgrounds/macos
-wget https://wallpapercave.com/wp/wp8696495.jpg -O macos-wallpaper.jpg
+mkdir -p ~/Home
+cd ~/Home
+wget https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg
+wget https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg
+wget https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg
+wget https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg
+wget https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg
 
 # Apply XFCE4 Theme and Icons (via xfconf)
 xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-dark"
 xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
 
 # Set Wallpaper
-xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s ~/.local/share/backgrounds/macos/macos-wallpaper.jpg
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s ~/Home/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg
 
 # Configure Plank Dock
 mkdir -p ~/.config/autostart
