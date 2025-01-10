@@ -70,11 +70,10 @@ This project provides a script to automate the installation of Ubuntu with a gra
    pkg install git -y
    git clone https://github.com/DeepEyeCrypto/DeepEyeCrypto.git
    cd DeepEyeCrypto
-   chmod +x ubuntu-termux-x11
-   ./ubuntu-termux-x11
+   chmod +x install-ubuntu.sh
+   ./install-ubuntu.sh
    ```
    # **START**
    ```BASH
-   cd ~/ubuntu
    ./start-ubuntu.sh
    
