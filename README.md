@@ -26,8 +26,8 @@ pkg update -y && pkg upgrade -y
 pkg install git -y
 git clone https://github.com/DeepEyeCrypto/DeepEyeCrypto.git
 cd DeepEyeCrypto
-chmod +x DeepEyeCrypto.sh
-./DeepEyeCrypto.sh
+chmod +x ~/DeepEyeCrypto.sh
+~/DeepEyeCrypto.sh
 
 ```
 # **Launch XFCE Desktop
