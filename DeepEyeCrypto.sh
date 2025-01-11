@@ -127,4 +127,7 @@ done &
 # Restart XFCE4 for Changes to Apply
 xfce4-session-logout --logout
 
+# Start the desktop environment
+startx
+
 exit 0
