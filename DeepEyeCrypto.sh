@@ -62,13 +62,6 @@ cd ~/WhiteSur-icon-theme
 xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-dark"
 xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
 
-# Install macOS Fonts
-mkdir -p ~/.fonts
-wget https://github.com/supermarin/YosemiteSanFranciscoFont/archive/master.zip -O mac-fonts.zip
-unzip mac-fonts.zip -d ~/.fonts
-fc-cache -fv
-xfconf-query -c xsettings -p /Gtk/FontName -s "San Francisco 11"
-
 # macOS Wallpapers
 cd /data/data/com.termux/files/home
 wget https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg -O big-sur.jpg
