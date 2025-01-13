@@ -19,6 +19,8 @@ pkg install unzip -y
 pkg install xfce4-appmenu-plugin -y
 pkg install chromium -y
 pkg install cairo-dock -y
+pkg install ruby -y  # Required for fusuma
+pkg install libinput-tools -y  # Required for fusuma
 
 # Kill existing termux.x11 processes
 pkill -f "termux.x11" 2>/dev/null
@@ -86,6 +88,54 @@ Comment=Start Cairo Dock on XFCE startup" > ~/.config/autostart/cairo-dock.deskt
 
 # Start Cairo Dock immediately
 cairo-dock &
+
+# Install fusuma for touchscreen gestures
+gem install fusuma
+
+# Create fusuma configuration directory
+mkdir -p ~/.config/fusuma
+
+# Create fusuma configuration file
+echo "
+swipe:
+  3:
+    left:
+      command: 'xdotool key alt+Right'
+    right:
+      command: 'xdotool key alt+Left'
+    up:
+      command: 'xdotool key super'
+    down:
+      command: 'xdotool key super+Shift'
+  4:
+    left:
+      command: 'xdotool key ctrl+alt+Right'
+    right:
+      command: 'xdotool key ctrl+alt+Left'
+    up:
+      command: 'xdotool key ctrl+alt+Up'
+    down:
+      command: 'xdotool key ctrl+alt+Down'
+
+pinch:
+  in:
+    command: 'xdotool key ctrl+plus'
+  out:
+    command: 'xdotool key ctrl+minus'
+" > ~/.config/fusuma/config.yml
+
+# Start fusuma on XFCE startup
+echo "[Desktop Entry]
+Type=Application
+Exec=fusuma
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=fusuma
+Comment=Start fusuma for touchscreen gestures on XFCE startup" > ~/.config/autostart/fusuma.desktop
+
+# Start fusuma immediately
+fusuma &
 
 # Customize XFCE Panel (Move to Top)
 xfconf-query -c xfce4-panel -p /panels/panel-0/position -s "p=8;x=0;y=0"
