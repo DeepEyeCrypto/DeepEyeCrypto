@@ -35,12 +35,12 @@ bash ~/DeepEyeCrypto.sh
 # ** START**
 
 ```bash
-./DeepEyeCrypto.sh start
+~/DeepEyeCrypto.sh
 ```
 ---
 # ** STOP **
 ```bash
-./DeepEyeCrypto.sh stop
+~/DeepEyeCrypto.sh stop
 ```
 # **2. Now install chromium **
 ```bash
