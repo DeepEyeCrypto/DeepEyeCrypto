@@ -16,9 +16,9 @@ pkg install firefox -y
 pkg install proot-distro -y
 pkg install git -y
 pkg install unzip -y
-pkg install plank -y
 pkg install xfce4-appmenu-plugin -y
 pkg install chromium -y
+pkg install cairo-dock -y
 
 # Kill existing termux.x11 processes
 pkill -f "termux.x11" 2>/dev/null
@@ -80,24 +80,19 @@ wget https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-hi
 # Set Default Wallpaper
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s /data/data/com.termux/files/home/big-sur.jpg
 
-# Configure Plank Dock
-mkdir -p ~/.config/plank/dock1
-echo "[DockPreferences]
-Position=bottom
-IconSize=48
-Theme=Transparent" > ~/.config/plank/dock1/settings
-mkdir -p ~/.config/autostart
+# Configure Cairo Dock
+mkdir -p ~/.config/cairo-dock
 echo "[Desktop Entry]
 Type=Application
-Exec=plank
+Exec=cairo-dock
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
-Name=Plank Dock
-Comment=Start Plank Dock on XFCE startup" > ~/.config/autostart/plank.desktop
+Name=Cairo Dock
+Comment=Start Cairo Dock on XFCE startup" > ~/.config/autostart/cairo-dock.desktop
 
-# Start Plank immediately
-plank &
+# Start Cairo Dock immediately
+cairo-dock &
 
 # Customize XFCE Panel (Move to Top)
 xfconf-query -c xfce4-panel -p /panels/panel-0/position -s "p=8;x=0;y=0"
