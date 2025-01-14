@@ -21,6 +21,7 @@ pkg install chromium -y
 pkg install cairo-dock -y
 pkg install ruby -y  # Required for fusuma
 pkg install libinput-tools -y  # Required for fusuma
+pkg install plank -y  # Install Plank
 
 # Kill existing termux.x11 processes
 pkill -f "termux.x11" 2>/dev/null
@@ -166,6 +167,20 @@ xfce4-panel --add=xappmenu-plugin
 # Add macOS-like Keyboard Shortcuts
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>Tab" -s "xfce4-appfinder --collapsed"
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>Space" -s "xfce4-appfinder"
+
+# Add Plank to XFCE startup
+mkdir -p ~/.config/autostart
+echo "[Desktop Entry]
+Type=Application
+Exec=plank
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Plank
+Comment=Start Plank on XFCE startup" > ~/.config/autostart/plank.desktop
+
+# Start Plank immediately
+plank &
 
 # Optional: Add Wallpaper Rotation
 while true; do
