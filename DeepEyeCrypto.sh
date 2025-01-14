@@ -48,12 +48,25 @@ export PULSE_SERVER=127.0.0.1
 env DISPLAY=:0 dbus-launch --exit-with-session xfce4-session >/dev/null 2>&1 &
 
 # Install macOS Theme and Icons
-mkdir -p ~/.themes ~/.icons
+mkdir -p /data/data/com.termux/files/home/.themes/ ~/.icons
 
 # macOS Theme
-git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git ~/WhiteSur-gtk-theme
-cd ~/WhiteSur-gtk-theme
+git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git /data/data/com.termux/files/home/.themes/WhiteSur-gtk-theme
+cd /data/data/com.termux/files/home/.themes/WhiteSur-gtk-theme
 ./install.sh
+
+# Extract macOS Themes
+mkdir -p /data/data/com.termux/files/home/.themes/
+cd /data/data/com.termux/files/home/.themes/
+
+tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Dark.tar.xz
+tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Dark-nord.tar.xz
+tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Dark-solid.tar.xz
+tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Dark-solid-nord.tar.xz
+tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Light.tar.xz
+tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Light-nord.tar.xz
+tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Light-solid.tar.xz
+tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Light-solid-nord.tar.xz
 
 # macOS Icons
 git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git ~/WhiteSur-icon-theme
@@ -62,7 +75,7 @@ cd ~/WhiteSur-icon-theme
 
 # Set WhiteSur-dark Theme and Icons
 xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-dark"
-xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
+xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur-dark"
 
 # macOS Wallpapers
 cd /data/data/com.termux/files/home
