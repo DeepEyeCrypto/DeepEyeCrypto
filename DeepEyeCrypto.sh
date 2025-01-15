@@ -4,24 +4,8 @@
 termux-setup-storage
 
 # Update and Install Required Packages
-pkg update -y
-pkg upgrade -y
-pkg install x11-repo -y
-pkg install termux-x11-nightly -y
-pkg install pulseaudio -y
-pkg install wget -y
-pkg install xfce4 -y
-pkg install tur-repo -y
-pkg install firefox -y
-pkg install proot-distro -y
-pkg install git -y
-pkg install unzip -y
-pkg install xfce4-appmenu-plugin -y
-pkg install chromium -y
-pkg install cairo-dock -y
-pkg install ruby -y  # Required for fusuma
-pkg install libinput-tools -y  # Required for fusuma
-pkg install plank -y  # Install Plank
+pkg update -y && pkg upgrade -y
+pkg install -y x11-repo termux-x11-nightly pulseaudio wget xfce4 tur-repo firefox proot-distro git unzip xfce4-appmenu-plugin chromium plank ruby libinput-tools
 
 # Kill existing termux.x11 processes
 pkill -f "termux.x11" 2>/dev/null
@@ -57,17 +41,10 @@ cd /data/data/com.termux/files/home/.themes/WhiteSur-gtk-theme
 ./install.sh
 
 # Extract macOS Themes
-mkdir -p /data/data/com.termux/files/home/.themes/
 cd /data/data/com.termux/files/home/.themes/
-
-tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Dark.tar.xz
-tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Dark-nord.tar.xz
-tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Dark-solid.tar.xz
-tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Dark-solid-nord.tar.xz
-tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Light.tar.xz
-tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Light-nord.tar.xz
-tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Light-solid.tar.xz
-tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/WhiteSur-Light-solid-nord.tar.xz
+for theme in WhiteSur-Dark WhiteSur-Dark-nord WhiteSur-Dark-solid WhiteSur-Dark-solid-nord WhiteSur-Light WhiteSur-Light-nord WhiteSur-Light-solid WhiteSur-Light-solid-nord; do
+    tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/$theme.tar.xz
+done
 
 # macOS Icons
 git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git ~/WhiteSur-icon-theme
@@ -89,19 +66,25 @@ wget https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-hi
 # Set Default Wallpaper
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s /data/data/com.termux/files/home/big-sur.jpg
 
-# Configure Cairo Dock
-mkdir -p ~/.config/cairo-dock
+# Configure Plank to Start on Login
+mkdir -p ~/.config/autostart
 echo "[Desktop Entry]
 Type=Application
-Exec=cairo-dock
+Exec=plank
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
-Name=Cairo Dock
-Comment=Start Cairo Dock on XFCE startup" > ~/.config/autostart/cairo-dock.desktop
+Name=Plank
+Comment=Start Plank on XFCE startup" > ~/.config/autostart/plank.desktop
 
-# Start Cairo Dock immediately
-cairo-dock &
+# Start Plank Immediately
+plank &
+
+# Remove Cairo-Dock if installed
+pkg uninstall cairo-dock -y
+
+# Remove Cairo-Dock autostart entry if exists
+rm -f ~/.config/autostart/cairo-dock.desktop
 
 # Install fusuma for touchscreen gestures
 gem install fusuma
@@ -167,20 +150,6 @@ xfce4-panel --add=xappmenu-plugin
 # Add macOS-like Keyboard Shortcuts
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>Tab" -s "xfce4-appfinder --collapsed"
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>Space" -s "xfce4-appfinder"
-
-# Add Plank to XFCE startup
-mkdir -p ~/.config/autostart
-echo "[Desktop Entry]
-Type=Application
-Exec=plank
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name=Plank
-Comment=Start Plank on XFCE startup" > ~/.config/autostart/plank.desktop
-
-# Start Plank immediately
-plank &
 
 # Optional: Add Wallpaper Rotation
 while true; do
