@@ -24,6 +24,14 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 ```bash
 pkg update -y && pkg upgrade -y
 termux-setup-storage
+pkg install x11-repo
+pkg install termux-x11-nightly
+pkg install pulseaudio
+pkg install xfce4
+pkg install tur-repo
+pkg install firefox -y
+pkg install tur-repo
+pkg install code-oss -y
 pkg install chromium -y
 pkg install git -y
 pkg install wget -y
