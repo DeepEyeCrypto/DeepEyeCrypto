@@ -31,6 +31,17 @@ chmod +x DeepEyeCrypto.sh
 bash ~/DeepEyeCrypto.sh
 
 ```
+# **1. install Theme**
+```bash
+pkg update -y && pkg upgrade -y
+pkg install git -y
+pkg install wget -y
+cd ~
+wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/DeepEyeCrypto.sh
+chmod +x DeepEyeCrypto.sh
+bash ~/DeepEyeCrypto.sh
+
+```
 # **Launch XFCE Desktop
 # ** START**
 
