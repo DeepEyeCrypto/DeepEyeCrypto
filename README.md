@@ -37,16 +37,16 @@ pkg update -y && pkg upgrade -y
 pkg install git -y
 pkg install wget -y
 cd ~
-wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/DeepEyeCrypto.sh
-chmod +x DeepEyeCrypto.sh
-bash ~/DeepEyeCrypto.sh
+wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/themes.sh
+chmod +x themes.sh
+./themes.sh
 
 ```
 # **Launch XFCE Desktop
 # ** START**
 
 ```bash
-~/DeepEyeCrypto.sh
+bash ~/DeepEyeCrypto.sh
 ```
 ---
 # ** STOP **
