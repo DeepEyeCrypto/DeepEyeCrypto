@@ -23,6 +23,7 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 # **1. Clone the Repository**
 ```bash
 pkg update -y && pkg upgrade -y
+termux-setup-storage
 pkg install chromium -y
 pkg install git -y
 pkg install wget -y
