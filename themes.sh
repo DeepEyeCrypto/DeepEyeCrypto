@@ -24,6 +24,11 @@ git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git ~/WhiteSur-icon
 cd ~/WhiteSur-icon-theme
 ./install.sh
 
+# candy-icons
+wget https://github.com/EliverLara/candy-icons/archive/refs/heads/master.zip -O ~/candy-icons.zip
+mkdir -p ~/.icons
+unzip ~/candy-icons.zip -d ~/.icons/
+
 # Set WhiteSur-dark Theme and Icons
 xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-dark"
 xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur-dark"
