@@ -43,7 +43,8 @@ bash ~/DeepEyeCrypto.sh
 ```
 # **1. install powerful OS**
 ```bash
-curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Powerful.sh -o Powerful.sh && bash Powerful.sh
+curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Powerful.sh -o install.sh && bash install.sh
+
 
 ```
 # **1. install Theme**
