@@ -41,6 +41,17 @@ chmod +x DeepEyeCrypto.sh
 bash ~/DeepEyeCrypto.sh
 
 ```
+# **1. install powerful OS**
+```bash
+pkg update -y && pkg upgrade -y
+pkg install git -y
+pkg install wget -y
+cd ~
+wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Powerful.sh
+chmod +x Powerful.sh
+./Powerful.sh
+
+```
 # **1. install Theme**
 ```bash
 pkg update -y && pkg upgrade -y
