@@ -476,4 +476,436 @@ cat <<'EOF' > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
     </property>
     <property name="plugin-8" type="string" value="clock">
       <property name="digital-layout" type="uint" value="3"/>
-      <property name="digital-time-format" type=
+      <property name="digital-time-format" type="string" value="%b %d  %I:%M %p"/>
+      <property name="digital-time-font" type="string" value="Sans Bold 12"/>
+    </property>
+    <property name="plugin-9" type="string" value="separator">
+      <property name="style" type="uint" value="0"/>
+      <property name="expand" type="bool" value="true"/>
+    </property>
+    <property name="plugin-12" type="string" value="separator">
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-17" type="string" value="separator">
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-4" type="string" value="tasklist">
+      <property name="show-handle" type="bool" value="false"/>
+      <property name="show-labels" type="bool" value="false"/>
+      <property name="sort-order" type="uint" value="0"/>
+    </property>
+    <property name="plugin-2" type="string" value="pulseaudio">
+      <property name="enable-keyboard-shortcuts" type="bool" value="true"/>
+      <property name="known-players" type="string" value="firefox-default"/>
+    </property>
+    <property name="plugin-7" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="17367087851.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-10" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="17367088062.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-11" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="17367088133.desktop"/>
+      </property>
+    </property>
+  </property>
+</channel>
+EOF
+
+# Create gtk.css with panel styling
+cat <<'EOF' > $HOME/.config/gtk-3.0/gtk.css
+.xfce4-panel {
+   border-top-left-radius: 10px;
+   border-top-right-radius: 10px;
+}
+EOF
+
+# Create bookmarks with custom name
+cat <<EOF > $HOME/.config/gtk-3.0/bookmarks
+file:////data/data/com.termux/files/home/Downloads
+file:///data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/debian/home/$username Debian Home
+file:////data/data/com.termux/files/home/storage/shared/ Android Storage
+EOF
+
+# Setup xfce4-terminal theme
+cat <<'EOF' > $HOME/.config/xfce4/terminal/terminalrc
+[Configuration]
+MiscAlwaysShowTabs=FALSE
+MiscBell=FALSE
+MiscBellUrgent=FALSE
+MiscBordersDefault=TRUE
+MiscCursorBlinks=FALSE
+MiscCursorShape=TERMINAL_CURSOR_SHAPE_BLOCK
+MiscDefaultGeometry=80x24
+MiscInheritGeometry=FALSE
+MiscMenubarDefault=TRUE
+MiscMouseAutohide=FALSE
+MiscMouseWheelZoom=TRUE
+MiscToolbarDefault=FALSE
+MiscConfirmClose=TRUE
+MiscCycleTabs=TRUE
+MiscTabCloseButtons=TRUE
+MiscTabCloseMiddleClick=TRUE
+MiscTabPosition=GTK_POS_TOP
+MiscHighlightUrls=TRUE
+MiscMiddleClickOpensUri=FALSE
+MiscCopyOnSelect=FALSE
+MiscShowRelaunchDialog=TRUE
+MiscRewrapOnResize=TRUE
+MiscUseShiftArrowsToScroll=FALSE
+MiscSlimTabs=FALSE
+MiscNewTabAdjacent=FALSE
+MiscSearchDialogOpacity=100
+MiscShowUnsafePasteDialog=TRUE
+MiscRightClickAction=TERMINAL_RIGHT_CLICK_ACTION_CONTEXT_MENU
+BackgroundMode=TERMINAL_BACKGROUND_TRANSPARENT
+BackgroundDarkness=0.900000
+ColorPalette=#000000;#cc0000;#4e9a06;#c4a000;#3465a4;#75507b;#06989a;#d3d7cf;#555753;#ef2929;#8ae234;#fce94f;#739fcf;#ad7fa8;#34e2e2;#eeeeec
+ColorBackground=#291f291f340d
+TitleMode=TERMINAL_TITLE_HIDE
+ScrollingUnlimited=TRUE
+ScrollingBar=TERMINAL_SCROLLBAR_NONE
+FontName=Cascadia Mono PL 12
+EOF
+
+# launcher-7
+cat <<EOF > $HOME/.config/xfce4/panel/launcher-7/17367087851.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Kill Termux X11
+Comment=
+Exec=kill_termux_x11
+Icon=system-shutdown
+Categories=System;
+Path=
+StartupNotify=false
+X-XFCE-Source=file:///data/data/com.termux/files/home/Desktop/kill_termux_x11.desktop
+EOF
+
+# launcher-10
+cat <<EOF > $HOME/.config/xfce4/panel/launcher-10/17367088062.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Exec=exo-open --launch FileManager %u
+Icon=user-blue-home
+StartupNotify=true
+Terminal=false
+Categories=Utility;X-XFCE;X-Xfce-Toplevel;
+Keywords=file;manager;explorer;browse;filesystem;directory;folder;xfce;
+OnlyShowIn=XFCE;
+X-XFCE-MimeType=inode/directory;x-scheme-handler/trash;
+X-AppStream-Ignore=True
+Name=File Manager
+Comment=Browse the file system
+X-XFCE-Source=file:///data/data/com.termux/files/home/Desktop/xfce4-file-manager.desktop
+EOF
+
+#launcher-11
+cat <<EOF > $HOME/.config/xfce4/panel/launcher-11/17367088133.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Exec=exo-open --launch TerminalEmulator
+Icon=org.xfce.terminalemulator
+StartupNotify=true
+Terminal=false
+Categories=Utility;X-XFCE;X-Xfce-Toplevel;
+Keywords=terminal;command line;shell;console;xfce;
+OnlyShowIn=XFCE;
+X-AppStream-Ignore=True
+Name=Terminal Emulator
+Comment=Use the command line
+X-XFCE-Source=file:///data/data/com.termux/files/home/Desktop/xfce4-terminal-emulator.desktop
+EOF
+
+# Setup Fonts
+wget https://github.com/microsoft/cascadia-code/releases/download/v2111.01/CascadiaCode-2111.01.zip
+unzip CascadiaCode-2111.01.zip
+mv otf/static/* .fonts/ && rm -rf otf
+mv ttf/* .fonts/ && rm -rf ttf/
+rm -rf woff2/ && rm -rf CascadiaCode-2111.01.zip
+
+wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Meslo.zip
+unzip Meslo.zip
+mv *.ttf .fonts/
+rm Meslo.zip
+rm LICENSE.txt
+rm readme.md
+
+wget https://github.com/phoenixbyrd/Termux_XFCE/raw/main/NotoColorEmoji-Regular.ttf
+mv NotoColorEmoji-Regular.ttf .fonts
+
+wget https://github.com/phoenixbyrd/Termux_XFCE/raw/main/font.ttf
+mv font.ttf .termux/font.ttf
+
+# Create start script
+cat <<'EOF' > $PREFIX/bin/start
+#!/bin/bash
+
+# Kill open X11 processes
+kill -9 $(pgrep -f "termux.x11") 2>/dev/null
+
+# Get the phone manufacturer
+MANUFACTURER=$(getprop ro.product.manufacturer | tr '[:upper:]' '[:lower:]')
+
+# Check the manufacturer
+if [[ "$MANUFACTURER" == "samsung" ]]; then
+    [ -d ~/.config/pulse ] && rm -rf ~/.config/pulse
+    LD_PRELOAD=/system/lib64/libskcodec.so pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1
+else
+   pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1
+fi
+
+# Set audio server
+export PULSE_SERVER=127.0.0.1
+
+# Prepare termux-x11 session
+export XDG_RUNTIME_DIR=${TMPDIR}
+termux-x11 :0 >/dev/null &
+
+# Wait a bit until termux-x11 gets started.
+sleep 3
+
+# Launch Termux X11 main activity
+am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+sleep 1
+
+# Function to check the GPU type
+gpu_check() {
+    # Attempt to detect GPU using getprop
+    gpu_egl=$(getprop ro.hardware.egl)
+    gpu_vulkan=$(getprop ro.hardware.vulkan)
+
+    # Combine unique GPU information
+    detected_gpu="$(echo -e "$gpu_egl\n$gpu_vulkan" | sort -u | tr '\n' ' ' | sed 's/ $//')"
+
+    if echo "$detected_gpu" | grep -iq "adreno"; then
+        echo "GPU detected: $detected_gpu"
+        MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1 virgl_test_server_android & > /dev/null 2>&1
+    elif echo "$detected_gpu" | grep -iq "mali"; then
+        echo "GPU detected: $detected_gpu"
+        MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1 virgl_test_server_android --angle-gl & > /dev/null 2>&1
+    else
+        echo "Unknown GPU type detected: $detected_gpu"
+        exit 1
+    fi
+}
+
+# Run the GPU check function
+gpu_check
+
+# Run XFCE4 Desktop
+dbus-daemon --session --address=unix:path=$PREFIX/var/run/dbus-session &
+env DISPLAY=:0 GALLIUM_DRIVER=virpipe dbus-launch --exit-with-session xfce4-session & > /dev/null 2>&1
+
+exit 0
+EOF
+
+chmod +x $PREFIX/bin/start
+
+# Create shutdown utility
+cat <<'EOF' > $PREFIX/bin/kill_termux_x11
+#!/bin/bash
+
+# Kill Termux-X11
+am broadcast -a com.termux.x11.ACTION_STOP -p com.termux.x11 > /dev/null 2>&1
+
+# Kill Termux
+pkill -f termux
+
+EOF
+
+chmod +x $PREFIX/bin/kill_termux_x11
+
+# Create kill_termux_x11.desktop
+echo "[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Kill Termux X11
+Comment=
+Exec=kill_termux_x11
+Icon=system-shutdown
+Categories=System;
+Path=
+StartupNotify=false
+" > $HOME/Desktop/kill_termux_x11.desktop
+chmod +x $HOME/Desktop/kill_termux_x11.desktop
+mv $HOME/Desktop/kill_termux_x11.desktop $PREFIX/share/applications
+
+# Create prun script
+cat <<'EOF' > $PREFIX/bin/prun
+#!/bin/bash
+varname=$(basename $PREFIX/var/lib/proot-distro/installed-rootfs/debian/home/*)
+pd login debian --user $varname --shared-tmp -- env DISPLAY=:0 $@
+
+EOF
+chmod +x $PREFIX/bin/prun
+
+# Create zrun script
+cat <<'EOF' > $PREFIX/bin/zrun
+#!/bin/bash
+varname=$(basename $PREFIX/var/lib/proot-distro/installed-rootfs/debian/home/*)
+pd login debian --user $varname --shared-tmp -- env DISPLAY=:0 MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform $@
+
+EOF
+chmod +x $PREFIX/bin/zrun
+
+# Create zrunhud script
+cat <<'EOF' > $PREFIX/bin/zrunhud
+#!/bin/bash
+varname=$(basename $PREFIX/var/lib/proot-distro/installed-rootfs/debian/home/*)
+pd login debian --user $varname --shared-tmp -- env DISPLAY=:0 MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform GALLIUM_HUD=fps $@
+
+EOF
+chmod +x $PREFIX/bin/zrunhud
+
+# App Installer
+
+git clone https://github.com/phoenixbyrd/App-Installer.git $HOME/.config/App-Installer
+chmod +x $HOME/.config/App-Installer/*
+
+echo "[Desktop Entry]
+Version=1.0
+Type=Application
+Name=App Installer
+Comment=
+Exec=/data/data/com.termux/files/home/.config/App-Installer/app-installer
+Icon=package-install
+Categories=System;
+Path=
+Terminal=false
+StartupNotify=false
+" > $HOME/Desktop/App-Installer.desktop
+chmod +x $HOME/Desktop/App-Installer.desktop
+cp $HOME/Desktop/App-Installer.desktop $PREFIX/share/applications
+
+# cp2menu
+
+wget https://github.com/phoenixbyrd/Termux_XFCE/raw/refs/heads/main/cp2menu -O $PREFIX/bin/cp2menu
+chmod +x $PREFIX/bin/cp2menu
+
+echo "[Desktop Entry]
+Version=1.0
+Type=Application
+Name=cp2menu
+Comment=
+Exec=cp2menu
+Icon=edit-move
+Categories=System;
+Path=
+Terminal=false
+StartupNotify=false
+" > $PREFIX/share/applications/cp2menu.desktop
+chmod +x $PREFIX/share/applications/cp2menu.desktop
+
+# Install Debian proot
+pkgs_proot=('sudo' 'onboard' 'conky-all' 'flameshot')
+
+# Install Debian proot
+pd install debian
+pd login debian --shared-tmp -- env DISPLAY=:0 apt update
+pd login debian --shared-tmp -- env DISPLAY=:0 apt upgrade -y
+pd login debian --shared-tmp -- env DISPLAY=:0 apt install "${pkgs_proot[@]}" -y -o Dpkg::Options::="--force-confold"
+
+# Create user
+pd login debian --shared-tmp -- env DISPLAY=:0 groupadd storage
+pd login debian --shared-tmp -- env DISPLAY=:0 groupadd wheel
+pd login debian --shared-tmp -- env DISPLAY=:0 useradd -m -g users -G wheel,audio,video,storage -s /bin/bash "$username"
+
+# Add user to sudoers
+chmod u+rw $PREFIX/var/lib/proot-distro/installed-rootfs/debian/etc/sudoers
+echo "$username ALL=(ALL) NOPASSWD:ALL" | tee -a $PREFIX/var/lib/proot-distro/installed-rootfs/debian/etc/sudoers > /dev/null
+chmod u-w  $PREFIX/var/lib/proot-distro/installed-rootfs/debian/etc/sudoers
+
+# Set proot DISPLAY
+echo "export DISPLAY=:0" >> $PREFIX/var/lib/proot-distro/installed-rootfs/debian/home/$username/.bashrc
+
+# Set aliases
+echo "
+alias ls='eza -lF --icons'
+alias cat='bat '
+
+eval "$(starship init bash)"
+" >> $PREFIX/var/lib/proot-distro/installed-rootfs/debian/home/$username/.bashrc
+
+# Set proot timezone
+timezone=$(getprop persist.sys.timezone)
+pd login debian --shared-tmp -- env DISPLAY=:0 rm /etc/localtime
+pd login debian --shared-tmp -- env DISPLAY=:0 cp /usr/share/zoneinfo/$timezone /etc/localtime
+
+# Setup Hardware Acceleration in proot
+pd login debian --shared-tmp -- env DISPLAY=:0 wget https://github.com/phoenixbyrd/Termux_XFCE/raw/main/mesa-vulkan-kgsl_24.1.0-devel-20240120_arm64.deb
+pd login debian --shared-tmp -- env DISPLAY=:0 sudo apt install -y ./mesa-vulkan-kgsl_24.1.0-devel-20240120_arm64.deb
+
+mkdir -p $PREFIX/var/lib/proot-distro/installed-rootfs/debian/home/$username/.config/
+
+# Download proot starship theme
+curl -o $PREFIX/var/lib/proot-distro/installed-rootfs/debian/home/$username/.config/starship.toml https://raw.githubusercontent.com/phoenixbyrd/Termux_XFCE/refs/heads/main/starship_proot.toml
+sed -i "s/phoenixbyrd/$username/" $PREFIX/var/lib/proot-distro/installed-rootfs/debian/home/$username/.config/starship.toml
+
+# Apply cursor theme
+cp -r $PREFIX/share/icons/dist-dark $PREFIX/var/lib/proot-distro/installed-rootfs/debian/usr/share/icons/dist-dark
+cat <<'EOF' > $PREFIX/var/lib/proot-distro/installed-rootfs/debian/home/$username/.Xresources
+Xcursor.theme: dist-dark
+EOF
+
+wget https://github.com/phoenixbyrd/Termux_XFCE/raw/main/conky.tar.gz
+tar -xvzf conky.tar.gz
+rm conky.tar.gz
+mv $HOME/.config/conky/ $PREFIX/var/lib/proot-distro/installed-rootfs/debian/home/$username/.config/
+
+# Conky
+cp $PREFIX/var/lib/proot-distro/installed-rootfs/debian/usr/share/applications/conky.desktop $HOME/.config/autostart/
+sed -i 's|^Exec=.*$|Exec=prun conky -c .config/conky/Alterf/Alterf.conf|' $HOME/.config/autostart/conky.desktop
+
+# Flameshot
+cp $PREFIX/var/lib/proot-distro/installed-rootfs/debian/usr/share/applications/org.flameshot.Flameshot.desktop $HOME/.config/autostart/
+sed -i 's|^Exec=.*$|Exec=prun flameshot|' $HOME/.config/autostart/org.flameshot.Flameshot.desktop
+
+chmod +x $HOME/.config/autostart/*.desktop
+
+}
+
+# Start installation
+main
+
+clear
+# Display usage instructions
+echo -e "\n${BLUE}╔════════════════════════════════════╗${NC}"
+echo -e "${BLUE}║         Setup Complete!            ║${NC}"
+echo -e "${BLUE}╚════════════════════════════════════╝${NC}\n"
+
+echo -e "${GREEN}Available Commands:${NC}"
+echo -e "${YELLOW}start${NC}"
+echo -e "Launches the XFCE desktop environment with hardware acceleration enabled\n"
+
+echo -e "${YELLOW}debian${NC}"
+echo -e "Enters the Debian proot environment for installing additional aarch64 packages\n"
+
+echo -e "${YELLOW}prun${NC}"
+echo -e "Executes Debian proot applications directly from Termux\n"
+
+echo -e "${YELLOW}zrun${NC}"
+echo -e "Runs Debian applications with hardware acceleration enabled\n"
+
+echo -e "${YELLOW}zrunhud${NC}"
+echo -e "Same as zrun but includes an FPS overlay for performance monitoring\n"
+
+echo -e "${GREEN}Note:${NC} For Firefox hardware acceleration:"
+echo -e "1. Open Firefox settings"
+echo -e "2. Search for 'performance'"
+echo -e "3. Uncheck the hardware acceleration option\n"
+
+echo -e "${YELLOW}Installation complete! Use 'start' to launch your desktop environment.${NC}\n"
+
+
+source $PREFIX/etc/bash.bashrc
+termux-reload-settings
+rm Powerful.sh
