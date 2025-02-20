@@ -43,6 +43,7 @@ bash ~/DeepEyeCrypto.sh
 ```
 # **1. install powerful OS**
 ```bash
+pkg install curl
 curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Powerful.sh -o install.sh && bash install.sh
 
 
