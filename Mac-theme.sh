@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Theming Section for Termux XFCE (macOS-enhanced)
+# macOS Theming Suite for Termux XFCE
 
 # Color definitions
 RED='\033[0;31m'
@@ -15,21 +15,21 @@ mkdir -p "$HOME/.fonts" \
          "$HOME/.config/gtk-3.0" \
          "$HOME/.config/xfce4/terminal"
 
-# Install theme-related packages
-echo -e "${BLUE}Installing theme packages...${NC}"
-pkg install -y papirus-icon-theme mesalib vulkan-icd-loader
+# Install core packages
+echo -e "${BLUE}Installing required packages...${NC}"
+pkg install -y papirus-icon-theme mesalib vulkan-icd-loader unzip
 
-# Download and apply multiple macOS wallpapers
-echo -e "${BLUE}Setting up macOS wallpapers...${NC}"
-mkdir -p $PREFIX/share/backgrounds/xfce/macOS/
-wget -q -P $PREFIX/share/backgrounds/xfce/macOS/ \
+# macOS Wallpaper Installation
+echo -e "${BLUE}Downloading macOS wallpapers...${NC}"
+mkdir -p $PREFIX/share/backgrounds/xfce/
+wget -q -P $PREFIX/share/backgrounds/xfce/ \
     https://raw.githubusercontent.com/termux/xfce-themes/macos/Mojave-Dynamic.jpg \
     https://raw.githubusercontent.com/termux/xfce-themes/macos/Monterery-Dark.jpeg \
     https://raw.githubusercontent.com/termux/xfce-themes/macos/Big-Sur-Light.jpg \
     https://raw.githubusercontent.com/termux/xfce-themes/macos/Ventura-Night.jpg
 
-# Install macOS-like GTK Themes
-echo -e "${BLUE}Installing macOS themes...${NC}"
+# GTK Theme Installation
+echo -e "${BLUE}Installing macOS GTK themes...${NC}"
 
 # WhiteSur Theme
 wget -q https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/2023-04-26.zip
@@ -47,8 +47,8 @@ wget -q https://github.com/vinceliuice/Monterey-gtk-theme/archive/refs/tags/2023
 unzip -q 2023-05-01.zip
 mv Monterey-gtk-theme-2023-05-01/Monterey-Dark $PREFIX/share/themes/
 
-# Install Cursor Themes
-echo -e "${BLUE}Installing cursor themes...${NC}"
+# Cursor Themes
+echo -e "${BLUE}Installing macOS-style cursors...${NC}"
 
 # Fluent Cursors
 wget -q https://github.com/vinceliuice/Fluent-icon-theme/archive/2023-02-01.zip
@@ -56,13 +56,15 @@ unzip -q 2023-02-01.zip
 mkdir -p $PREFIX/share/icons/
 mv Fluent-icon-theme-2023-02-01/cursors/dist* $PREFIX/share/icons/
 
-# Capitaine Cursors (macOS style)
+# Capitaine Cursors
 wget -q https://github.com/keeferrourke/capitaine-cursors/releases/download/r5.0.0/capitaine-cursors-r5.0.0.tar.bz2
 tar -xjf capitaine-cursors-r5.0.0.tar.bz2
 mv capitaine-cursors/ $PREFIX/share/icons/
 
-# Configure XFCE appearance
-echo -e "${BLUE}Configuring XFCE settings...${NC}"
+# XFCE Configuration
+echo -e "${BLUE}Configuring XFCE desktop...${NC}"
+
+# XSettings Configuration
 cat <<'EOF' > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
 <?xml version="1.1" encoding="UTF-8"?>
 <channel name="xsettings" version="1.0">
@@ -77,6 +79,7 @@ cat <<'EOF' > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
 </channel>
 EOF
 
+# Window Manager Configuration
 cat <<'EOF' > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
 <?xml version="1.1" encoding="UTF-8"?>
 <channel name="xfwm4" version="1.0">
@@ -87,8 +90,7 @@ cat <<'EOF' > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
 </channel>
 EOF
 
-# Configure panel styling
-echo -e "${BLUE}Setting up panel styling...${NC}"
+# Panel Styling
 cat <<'EOF' > $HOME/.config/gtk-3.0/gtk.css
 .xfce4-panel {
    border-top-left-radius: 10px;
@@ -97,31 +99,36 @@ cat <<'EOF' > $HOME/.config/gtk-3.0/gtk.css
 }
 EOF
 
-# Install fonts
-echo -e "${BLUE}Installing fonts...${NC}"
+# Font Installation
+echo -e "${BLUE}Installing macOS-style fonts...${NC}"
 wget -q https://github.com/microsoft/cascadia-code/releases/download/v2111.01/CascadiaCode-2111.01.zip
 unzip -q CascadiaCode-2111.01.zip
 mv otf/static/*.ttf $HOME/.fonts/
-rm -rf otf ttf woff2 CascadiaCode*
 
 wget -q https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Meslo.zip
 unzip -q Meslo.zip -d $HOME/.fonts/
-rm Meslo.zip
 
-# Configure terminal theme
-echo -e "${BLUE}Configuring terminal...${NC}"
+# Terminal Configuration
+echo -e "${BLUE}Setting up terminal emulator...${NC}"
 cat <<'EOF' > $HOME/.config/xfce4/terminal/terminalrc
 [Configuration]
 ColorPalette=#000000;#cc0000;#4e9a06;#c4a000;#3465a4;#75507b;#06989a;#d3d7cf;#555753;#ef2929;#8ae234;#fce94f;#739fcf;#ad7fa8;#34e2e2;#eeeeec
 FontName=MesloLGS NF 12
 EOF
 
-# Cleanup temporary files
-rm -rf WhiteSur* McMojave* Monterey* Fluent* capitaine* 2023*.zip *.tar.bz2
+# Cleanup
+echo -e "${BLUE}Cleaning up temporary files...${NC}"
+rm -rf WhiteSur* McMojave* Monterey* Fluent* capitaine* 
+rm -rf 2023*.zip *.tar.bz2 Cascadia* Meslo.zip
 
-echo -e "${GREEN}\nmacOS theming setup complete! Added:"
-echo -e "- 3 GTK Themes: WhiteSur, McMojave, Monterey"
-echo -e "- 2 Cursor Themes: Fluent & Capitaine"
-echo -e "- 4 macOS Wallpapers (in Settings > Backgrounds)"
-echo -e "- San Francisco/Cascadia fonts"
-echo -e "Restart XFCE and change themes via Appearance settings!${NC}"
+echo -e "${GREEN}\nmacOS Theming Suite installed successfully!${NC}"
+echo -e "Included components:"
+echo -e "  - 3 GTK Themes: WhiteSur-Dark, McMojave-Dark, Monterey-Dark"
+echo -e "  - 2 Cursor Packs: Fluent & Capitaine"
+echo -e "  - 4 macOS Wallpapers (Mojave, Monterey, Big Sur, Ventura)"
+echo -e "  - System Fonts: Cascadia Code + Meslo Nerd Font"
+echo -e "\nTo customize:"
+echo -e "  1. Open Appearance settings to change themes"
+echo -e "  2. Mouse settings to change cursor theme"
+echo -e "  3. Background settings to select wallpaper"
+echo -e "  4. Terminal preferences to adjust font/size\n"
