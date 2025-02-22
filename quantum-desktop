@@ -3,7 +3,7 @@
 # Enhanced Termux Desktop Environment Setup
 # Version: 2.1
 # Author: DeepEyeCrypto
-# Repository: https://github.com/DeepEyeCrypto
+# Repository: https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/quantum-desktop
 
 set -eo pipefail
 trap 'handle_error $? $LINENO "${BASH_COMMAND}"' ERR
