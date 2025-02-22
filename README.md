@@ -43,10 +43,10 @@ bash ~/DeepEyeCrypto.sh
 ```
 # **1. install powerful OS**
 ```bash
-wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Powerful
-chmod +x Powerful
-mv Powerful $PREFIX/bin
-Powerful --install
+wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/setup-termux-desktop
+chmod +x setup-termux-desktop
+mv setup-termux-desktop $PREFIX/bin
+setup-termux-desktop --install
 ```
 # **1. install Theme**
 ```bash
