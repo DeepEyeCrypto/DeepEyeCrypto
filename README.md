@@ -43,11 +43,10 @@ bash ~/DeepEyeCrypto.sh
 ```
 # **1. install powerful OS**
 ```bash
-pkg update -y && pkg upgrade -y
-pkg install curl
-curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Powerful.sh -o install.sh && bash install.sh
-
-
+wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Powerful
+chmod +x Powerful
+mv Powerful $PREFIX/bin
+Powerful --install
 ```
 # **1. install Theme**
 ```bash
