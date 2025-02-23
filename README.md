@@ -43,9 +43,10 @@ bash ~/DeepEyeCrypto.sh
 ```
 # **1. install powerful OS**
 ```bash
-wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/quantum-desktop.sh
-chmod +x quantum-desktop.sh
-./quantum-desktop.sh
+pkg install wget
+wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/termux-ultimate-setup.sh
+chmod +x termux-ultimate-setup.sh
+./termux-ultimate-setup.sh
 ```
 # **1. install Theme**
 ```bash
