@@ -43,9 +43,9 @@ bash ~/DeepEyeCrypto.sh
 ```
 # **1. install powerful OS**
 ```bash
-wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/quantum-desktop
-chmod +x quantum-desktop
-./quantum-desktop --install
+wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/quantum-desktop.sh
+chmod +x quantum-desktop.sh
+./quantum-desktop.sh
 ```
 # **1. install Theme**
 ```bash
