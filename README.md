@@ -48,6 +48,12 @@ wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/termux-u
 chmod +x termux-ultimate-setup.sh
 ./termux-ultimate-setup.sh
 ```
+# **2. Launch X11
+# ** START**
+
+```bash
+tx11start
+```
 # **1. install Theme**
 ```bash
 pkg update -y && pkg upgrade -y
@@ -59,7 +65,7 @@ chmod +x themes.sh
 ./themes.sh
 
 ```
-# **1. install Theme**
+# **2. install Theme**
 ```bash
 pkg update -y && pkg upgrade -y
 pkg install git -y
