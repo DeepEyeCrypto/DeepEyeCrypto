@@ -52,7 +52,7 @@ chmod +x termux-ultimate-setup.sh
 # ** START**
 
 ```bash
-tx11start
+tx11start --legacy
 ```
 # **1. install Theme**
 ```bash
