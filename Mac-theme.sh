@@ -1,134 +1,170 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 
-# macOS Theming Suite for Termux XFCE
+# Termux XFCE Ultimate+ Widgets Theme Installer
+# Features: Widgets, Conky, Plank-like dock, and system monitors
 
-# Color definitions
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# ... (keep previous configuration and functions)
 
-# Create configuration directories
-mkdir -p "$HOME/.fonts" \
-         "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml" \
-         "$HOME/.config/gtk-3.0" \
-         "$HOME/.config/xfce4/terminal"
+install_dependencies() {
+    echo "📦 Installing system dependencies..."
+    pkg update -y && pkg install -y \
+        git wget curl python libsass \
+        x11-repo termux-x11-nightly \
+        xfce4-settings xfce4-panel-profiles \
+        imagemagick fontconfig scrot jq \
+        xfce4-taskmanager \
+        # Additional widgets and plugins
+        xfce4-cpufreq-plugin \
+        xfce4-systemload-plugin \
+        xfce4-battery-plugin \
+        xfce4-clipman-plugin \
+        xfce4-netload-plugin \
+        xfce4-whiskermenu-plugin \
+        xfce4-pulseaudio-plugin \
+        # Conky system monitor
+        conky \
+        # Plank-like dock dependencies
+        xfce4-docklike-plugin \
+        # Weather widget dependencies
+        curl jq && pip install pytz tzlocal || die "Failed to install packages"
+}
 
-# Install core packages
-echo -e "${BLUE}Installing required packages...${NC}"
-pkg install -y papirus-icon-theme mesalib vulkan-icd-loader unzip
+configure_xfce() {
+    echo "🖥  Configuring XFCE desktop with widgets..."
+    local dpi=$(calculate_dpi)
+    local font_size=$(( dpi > 140 ? 10 : 9 ))
 
-# macOS Wallpaper Installation
-echo -e "${BLUE}Downloading macOS wallpapers...${NC}"
-mkdir -p $PREFIX/share/backgrounds/xfce/
-wget -q -P $PREFIX/share/backgrounds/xfce/ \
-    https://raw.githubusercontent.com/termux/xfce-themes/macos/Mojave-Dynamic.jpg \
-    https://raw.githubusercontent.com/termux/xfce-themes/macos/Monterery-Dark.jpeg \
-    https://raw.githubusercontent.com/termux/xfce-themes/macos/Big-Sur-Light.jpg \
-    https://raw.githubusercontent.com/termux/xfce-themes/macos/Ventura-Night.jpg
-
-# GTK Theme Installation
-echo -e "${BLUE}Installing macOS GTK themes...${NC}"
-
-# WhiteSur Theme
-wget -q https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/2023-04-26.zip
-unzip -q 2023-04-26.zip
-tar -xf WhiteSur-gtk-theme-2023-04-26/release/WhiteSur-Dark-44-0.tar.xz
-mv WhiteSur-Dark/ $PREFIX/share/themes/
-
-# McMojave Theme
-wget -q https://github.com/vinceliuice/McMojave-circle/archive/refs/tags/2023-06-15.zip
-unzip -q 2023-06-15.zip
-mv McMojave-circle-2023-06-15/McMojave-circle-Dark $PREFIX/share/themes/
-
-# Monterey Theme
-wget -q https://github.com/vinceliuice/Monterey-gtk-theme/archive/refs/tags/2023-05-01.zip
-unzip -q 2023-05-01.zip
-mv Monterey-gtk-theme-2023-05-01/Monterey-Dark $PREFIX/share/themes/
-
-# Cursor Themes
-echo -e "${BLUE}Installing macOS-style cursors...${NC}"
-
-# Fluent Cursors
-wget -q https://github.com/vinceliuice/Fluent-icon-theme/archive/2023-02-01.zip
-unzip -q 2023-02-01.zip
-mkdir -p $PREFIX/share/icons/
-mv Fluent-icon-theme-2023-02-01/cursors/dist* $PREFIX/share/icons/
-
-# Capitaine Cursors
-wget -q https://github.com/keeferrourke/capitaine-cursors/releases/download/r5.0.0/capitaine-cursors-r5.0.0.tar.bz2
-tar -xjf capitaine-cursors-r5.0.0.tar.bz2
-mv capitaine-cursors/ $PREFIX/share/icons/
-
-# XFCE Configuration
-echo -e "${BLUE}Configuring XFCE desktop...${NC}"
-
-# XSettings Configuration
-cat <<'EOF' > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
-<?xml version="1.1" encoding="UTF-8"?>
-<channel name="xsettings" version="1.0">
-  <property name="Net" type="empty">
-    <property name="ThemeName" type="string" value="WhiteSur-Dark"/>
-    <property name="IconThemeName" type="string" value="Papirus-Dark"/>
-  </property>
-  <property name="Gtk" type="empty">
-    <property name="CursorThemeName" type="string" value="capitaine-cursors"/>
-    <property name="CursorThemeSize" type="int" value="28"/>
+    # Create custom widget panel layout
+    cat > /tmp/panel.xml << 'EOF'
+<channel name="xfce4-panel" version="1.0">
+  <property name="panels" type="array">
+    <value type="int" value="1"/>
+    <property name="panel-1" type="empty">
+      <property name="position" type="string" value="p=8;x=0;y=0"/>
+      <property name="length" type="uint" value="100"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="plugins" type="array">
+        <value type="string" value="whiskermenu"/>
+        <value type="string" value="tasklist"/>
+        <value type="string" value="separator"/>
+        <value type="string" value="systray"/>
+        <value type="string" value="pulseaudio"/>
+        <value type="string" value="cpufreq"/>
+        <value type="string" value="systemload"/>
+        <value type="string" value="netload"/>
+        <value type="string" value="battery"/>
+        <value type="string" value="clock"/>
+        <value type="string" value="actions"/>
+      </property>
+    </property>
   </property>
 </channel>
 EOF
 
-# Window Manager Configuration
-cat <<'EOF' > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
-<?xml version="1.1" encoding="UTF-8"?>
-<channel name="xfwm4" version="1.0">
-  <property name="general" type="empty">
-    <property name="theme" type="string" value="WhiteSur-Dark"/>
-    <property name="title_alignment" type="string" value="center"/>
-  </property>
-</channel>
+    xfce4-panel-profiles load /tmp/panel.xml
+
+    # Configure conky system monitor
+    cat > ${HOME}/.conkyrc << 'EOF'
+conky.config = {
+    alignment = 'top_right',
+    background = true,
+    border_width = 1,
+    cpu_avg_samples = 2,
+    default_color = 'white',
+    default_outline_color = 'white',
+    default_shade_color = 'white',
+    draw_borders = false,
+    draw_graph_borders = true,
+    draw_outline = false,
+    draw_shades = false,
+    use_xft = true,
+    font = 'SF Pro:size=10',
+    gap_x = 20,
+    gap_y = 40,
+    minimum_height = 200,
+    minimum_width = 250,
+    net_avg_samples = 2,
+    no_buffers = true,
+    out_to_console = false,
+    out_to_stderr = false,
+    extra_newline = false,
+    own_window = true,
+    own_window_class = 'Conky',
+    own_window_type = 'desktop',
+    own_window_argb_visual = true,
+    own_window_argb_value = 150,
+    stippled_borders = 0,
+    update_interval = 1.0,
+    uppercase = false,
+    use_spacer = 'none',
+    show_graph_scale = false,
+    show_graph_range = false
+}
+
+conky.text = [[
+${color}SYSTEM ${hr 1}
+${color}Host: $alignr$nodename
+${color}OS: $alignr${exec termux-info | grep 'termux-packages' | cut -d '/' -f4}
+${color}Kernel: $alignr$machine
+
+${color}CPU ${hr 1}
+${color}Frequency: $alignr${freq_g} GHz
+${color}Usage: $alignr${cpu}%
+${cpubar}
+
+${color}MEMORY ${hr 1}
+${color}RAM: $alignr$mem / $memmax
+${membar}
+
+${color}STORAGE ${hr 1}
+${color}Root: $alignr${fs_used /} / ${fs_size /}
+${fs_bar /}
+]]
 EOF
 
-# Panel Styling
-cat <<'EOF' > $HOME/.config/gtk-3.0/gtk.css
-.xfce4-panel {
-   border-top-left-radius: 10px;
-   border-top-right-radius: 10px;
-   background-color: rgba(255, 255, 255, 0.1);
+    # Configure weather widget (requires API key)
+    mkdir -p ${HOME}/.config/xfce4/weather
+    cat > ${HOME}/.config/xfce4/weather/weather.json << 'EOF'
+{
+    "api-key": "YOUR_OPENWEATHER_API_KEY",
+    "city-id": "524901",  # Moscow by default
+    "units": "metric",
+    "refresh-interval": 30
+}
+EOF
+}
+
+# Add dock-like panel configuration
+configure_dock() {
+    echo "🚢 Configuring application dock..."
+    mkdir -p ${HOME}/.local/share/xfce4-docklike
+    cat > ${HOME}/.local/share/xfce4-docklike/config << 'EOF'
+{
+    "icon-size": 48,
+    "items": [
+        "exo-terminal-emulator.desktop",
+        "exo-file-manager.desktop",
+        "exo-web-browser.desktop"
+    ],
+    "theme": "macos",
+    "hover-effect": true,
+    "hide-delay": 300
 }
 EOF
 
-# Font Installation
-echo -e "${BLUE}Installing macOS-style fonts...${NC}"
-wget -q https://github.com/microsoft/cascadia-code/releases/download/v2111.01/CascadiaCode-2111.01.zip
-unzip -q CascadiaCode-2111.01.zip
-mv otf/static/*.ttf $HOME/.fonts/
+    xfconf-query -c xfce4-panel -p /plugins/plugin-15 -s docklike
+}
 
-wget -q https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Meslo.zip
-unzip -q Meslo.zip -d $HOME/.fonts/
+# ... (keep previous setup_wallpapers and validate_installation)
 
-# Terminal Configuration
-echo -e "${BLUE}Setting up terminal emulator...${NC}"
-cat <<'EOF' > $HOME/.config/xfce4/terminal/terminalrc
-[Configuration]
-ColorPalette=#000000;#cc0000;#4e9a06;#c4a000;#3465a4;#75507b;#06989a;#d3d7cf;#555753;#ef2929;#8ae234;#fce94f;#739fcf;#ad7fa8;#34e2e2;#eeeeec
-FontName=MesloLGS NF 12
-EOF
-
-# Cleanup
-echo -e "${BLUE}Cleaning up temporary files...${NC}"
-rm -rf WhiteSur* McMojave* Monterey* Fluent* capitaine* 
-rm -rf 2023*.zip *.tar.bz2 Cascadia* Meslo.zip
-
-echo -e "${GREEN}\nmacOS Theming Suite installed successfully!${NC}"
-echo -e "Included components:"
-echo -e "  - 3 GTK Themes: WhiteSur-Dark, McMojave-Dark, Monterey-Dark"
-echo -e "  - 2 Cursor Packs: Fluent & Capitaine"
-echo -e "  - 4 macOS Wallpapers (Mojave, Monterey, Big Sur, Ventura)"
-echo -e "  - System Fonts: Cascadia Code + Meslo Nerd Font"
-echo -e "\nTo customize:"
-echo -e "  1. Open Appearance settings to change themes"
-echo -e "  2. Mouse settings to change cursor theme"
-echo -e "  3. Background settings to select wallpaper"
-echo -e "  4. Terminal preferences to adjust font/size\n"
+# Main Execution
+check_android_version
+install_dependencies
+backup_config
+install_fonts
+install_theme
+configure_xfce
+configure_dock
+setup_wallpapers
+validate_installation
+cleanup
