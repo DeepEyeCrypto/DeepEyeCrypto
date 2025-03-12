@@ -1,58 +1,115 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Termux XFCE Ultimate+ Widgets Theme Installer
-# Features: Widgets, Conky, Plank-like dock, and system monitors
+# Termux XFCE WhiteSur Enhanced Theme Script
+# Includes: DPI scaling, font installation, and panel configuration
 
-# ... (keep previous configuration and functions)
+# Enable error handling and logging
+set -euo pipefail
+exec > >(tee "${HOME}/whitesur-install.log") 2>&1
 
-install_dependencies() {
-    echo "📦 Installing system dependencies..."
-    pkg update -y && pkg install -y \
-        git wget curl python libsass \
-        x11-repo termux-x11-nightly \
-        xfce4-settings xfce4-panel-profiles \
-        imagemagick fontconfig scrot jq \
-        xfce4-taskmanager \
-        # Additional widgets and plugins
-        xfce4-cpufreq-plugin \
-        xfce4-systemload-plugin \
-        xfce4-battery-plugin \
-        xfce4-clipman-plugin \
-        xfce4-netload-plugin \
-        xfce4-whiskermenu-plugin \
-        xfce4-pulseaudio-plugin \
-        # Conky system monitor
-        conky \
-        # Plank-like dock dependencies
-        xfce4-docklike-plugin \
-        # Weather widget dependencies
-        curl jq && pip install pytz tzlocal || die "Failed to install packages"
+# Configuration variables
+THEME_DIR="${HOME}/.local/share/themes"
+ICON_DIR="${HOME}/.local/share/icons"
+FONT_DIR="${HOME}/.local/share/fonts"
+WALLPAPER_DIR="${HOME}/WhiteSur-Wallpapers"
+WORK_DIR="${HOME}/WhiteSur-temp"
+
+# Detect screen density for mobile displays
+detect_scaling() {
+    local density=96
+    if [ -n "$(command -v xdpyinfo)" ]; then
+        local res=$(xdpyinfo | grep -oP "dimensions:\s+\K\d+x\d+")
+        local width=${res/x*/}
+        [ $width -lt 1080 ] && density=120
+    fi
+    echo $density
 }
 
-configure_xfce() {
-    echo "🖥  Configuring XFCE desktop with widgets..."
-    local dpi=$(calculate_dpi)
-    local font_size=$(( dpi > 140 ? 10 : 9 ))
+# Install enhanced dependencies
+install_deps() {
+    echo "📦 Updating packages and installing dependencies..."
+    pkg update -y && pkg install -y \
+        git wget curl python libsass \
+        xfce4-settings xfce4-panel-profiles \
+        x11-repo termux-x11-nightly \
+        fontconfig scrot imagemagick
+    
+    # Install patched fonts
+    mkdir -p "${FONT_DIR}"
+    wget -qO- https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SanFrancisco/SF-Pro.ttf \
+        -O "${FONT_DIR}/SF-Pro.ttf"
+    fc-cache -fv
+}
 
-    # Create custom widget panel layout
-    cat > /tmp/panel.xml << 'EOF'
+# Setup working environment
+setup_dirs() {
+    echo "📂 Creating directories..."
+    mkdir -p "${WORK_DIR}" "${WALLPAPER_DIR}" \
+        "${THEME_DIR}" "${ICON_DIR}" "${FONT_DIR}"
+    cd "${WORK_DIR}"
+}
+
+# Clone and build themes
+install_themes() {
+    echo "🎨 Installing themes..."
+    local repos=(
+        "WhiteSur-wallpapers https://github.com/vinceliuice/WhiteSur-wallpapers"
+        "WhiteSur-gtk-theme https://github.com/vinceliuice/WhiteSur-gtk-theme"
+        "WhiteSur-icon-theme https://github.com/vinceliuice/WhiteSur-icon-theme"
+    )
+
+    for repo in "${repos[@]}"; do
+        local name=${repo%% *}
+        local url=${repo#* }
+        echo "🔧 Cloning ${name}..."
+        git clone --depth 1 "${url}" || {
+            echo "⚠️ Failed to clone ${name}, using fallback..."
+            wget -qO- "${url}/archive/main.tar.gz" | tar xz --strip=1
+        }
+    done
+
+    # GTK Theme with mobile optimizations
+    cd WhiteSur-gtk-theme
+    ./install.sh -t all -c Dark --tweaks "rimless macos" \
+        --dest "${THEME_DIR}" --size standard --transparent
+
+    # Icon Theme with smaller sizes
+    cd ../WhiteSur-icon-theme
+    ./install.sh -b --black --dest "${ICON_DIR}" --size 32x32
+
+    # Wallpapers
+    cd ../WhiteSur-wallpapers
+    ./install.sh --dest "${HOME}/.local/share/backgrounds"
+}
+
+# Configure XFCE desktop
+configure_xfce() {
+    echo "🖥  Configuring XFCE4..."
+    local density=$(detect_scaling)
+
+    # Apply XFCE settings
+    xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark"
+    xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
+    xfconf-query -c xsettings -p /Gtk/FontName -s "SF Pro 10"
+    xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark"
+    xfconf-query -c xfwm4 -p /general/title_font -s "SF Pro Bold 10"
+    xfconf-query -c xsettings -p /Xft/DPI -n -t int -s $((density * 1024))
+
+    # Panel configuration (macOS-like layout)
+    cat > "${HOME}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
 <channel name="xfce4-panel" version="1.0">
+  <property name="configver" type="int" value="2"/>
   <property name="panels" type="array">
     <value type="int" value="1"/>
     <property name="panel-1" type="empty">
-      <property name="position" type="string" value="p=8;x=0;y=0"/>
+      <property name="position" type="string" value="p=6;x=0;y=0"/>
       <property name="length" type="uint" value="100"/>
       <property name="position-locked" type="bool" value="true"/>
       <property name="plugins" type="array">
-        <value type="string" value="whiskermenu"/>
+        <value type="string" value="applicationsmenu"/>
         <value type="string" value="tasklist"/>
-        <value type="string" value="separator"/>
         <value type="string" value="systray"/>
-        <value type="string" value="pulseaudio"/>
-        <value type="string" value="cpufreq"/>
-        <value type="string" value="systemload"/>
-        <value type="string" value="netload"/>
-        <value type="string" value="battery"/>
         <value type="string" value="clock"/>
         <value type="string" value="actions"/>
       </property>
@@ -61,110 +118,29 @@ configure_xfce() {
 </channel>
 EOF
 
-    xfce4-panel-profiles load /tmp/panel.xml
-
-    # Configure conky system monitor
-    cat > ${HOME}/.conkyrc << 'EOF'
-conky.config = {
-    alignment = 'top_right',
-    background = true,
-    border_width = 1,
-    cpu_avg_samples = 2,
-    default_color = 'white',
-    default_outline_color = 'white',
-    default_shade_color = 'white',
-    draw_borders = false,
-    draw_graph_borders = true,
-    draw_outline = false,
-    draw_shades = false,
-    use_xft = true,
-    font = 'SF Pro:size=10',
-    gap_x = 20,
-    gap_y = 40,
-    minimum_height = 200,
-    minimum_width = 250,
-    net_avg_samples = 2,
-    no_buffers = true,
-    out_to_console = false,
-    out_to_stderr = false,
-    extra_newline = false,
-    own_window = true,
-    own_window_class = 'Conky',
-    own_window_type = 'desktop',
-    own_window_argb_visual = true,
-    own_window_argb_value = 150,
-    stippled_borders = 0,
-    update_interval = 1.0,
-    uppercase = false,
-    use_spacer = 'none',
-    show_graph_scale = false,
-    show_graph_range = false
+    # Set random wallpaper with imagemagick optimization
+    local wall=$(find "${WALLPAPER_DIR}" -type f | shuf -n 1)
+    convert "${wall}" -resize 1080x1920^ -gravity center -extent 1080x1920 \
+        "${HOME}/.cache/wallpaper-optimized.jpg"
+    xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image \
+        -s "${HOME}/.cache/wallpaper-optimized.jpg"
 }
 
-conky.text = [[
-${color}SYSTEM ${hr 1}
-${color}Host: $alignr$nodename
-${color}OS: $alignr${exec termux-info | grep 'termux-packages' | cut -d '/' -f4}
-${color}Kernel: $alignr$machine
-
-${color}CPU ${hr 1}
-${color}Frequency: $alignr${freq_g} GHz
-${color}Usage: $alignr${cpu}%
-${cpubar}
-
-${color}MEMORY ${hr 1}
-${color}RAM: $alignr$mem / $memmax
-${membar}
-
-${color}STORAGE ${hr 1}
-${color}Root: $alignr${fs_used /} / ${fs_size /}
-${fs_bar /}
-]]
-EOF
-
-    # Configure weather widget (requires API key)
-    mkdir -p ${HOME}/.config/xfce4/weather
-    cat > ${HOME}/.config/xfce4/weather/weather.json << 'EOF'
-{
-    "api-key": "YOUR_OPENWEATHER_API_KEY",
-    "city-id": "524901",  # Moscow by default
-    "units": "metric",
-    "refresh-interval": 30
-}
-EOF
+# Post-installation cleanup and checks
+finalize() {
+    echo "🧹 Cleaning up..."
+    rm -rf "${WORK_DIR}"
+    
+    echo -e "\n✅ Installation Complete! Recommended next steps:"
+    echo "1. Restart Termux-X11 session"
+    echo "2. Run 'xfce4-panel-profiles' to load custom layouts"
+    echo "3. Adjust DPI in ~/.Xresources if needed"
+    echo "4. Wallpapers available at: ${WALLPAPER_DIR}"
 }
 
-# Add dock-like panel configuration
-configure_dock() {
-    echo "🚢 Configuring application dock..."
-    mkdir -p ${HOME}/.local/share/xfce4-docklike
-    cat > ${HOME}/.local/share/xfce4-docklike/config << 'EOF'
-{
-    "icon-size": 48,
-    "items": [
-        "exo-terminal-emulator.desktop",
-        "exo-file-manager.desktop",
-        "exo-web-browser.desktop"
-    ],
-    "theme": "macos",
-    "hover-effect": true,
-    "hide-delay": 300
-}
-EOF
-
-    xfconf-query -c xfce4-panel -p /plugins/plugin-15 -s docklike
-}
-
-# ... (keep previous setup_wallpapers and validate_installation)
-
-# Main Execution
-check_android_version
-install_dependencies
-backup_config
-install_fonts
-install_theme
+# Main execution flow
+install_deps
+setup_dirs
+install_themes
 configure_xfce
-configure_dock
-setup_wallpapers
-validate_installation
-cleanup
+finalize
