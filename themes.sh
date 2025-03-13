@@ -1,72 +1,119 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Check if DeepEyeCrypto.sh exists
-if [ ! -f ~/DeepEyeCrypto.sh ]; then
-    echo "Error: DeepEyeCrypto.sh not found in home directory. Place the file in ~/ and rerun this script."
-    exit 1
-fi
+# Colors
+R="\033[1;31m"
+G="\033[1;32m"
+Y="\033[1;33m"
+B="\033[1;34m"
+C="\033[1;36m"
+W="\033[0m"
 
-# Ensure DeepEyeCrypto.sh is executable
-chmod +x ~/DeepEyeCrypto.sh
+# Configuration
+STYLE=${1:-3}  # Default to macOS theme
+BASE_URL="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_"
+WALLPAPER_DIR="$PREFIX/share/backgrounds"
+ICON_DIR="$HOME/.icons"
+THEME_DIR="$HOME/.themes"
 
-# Add command to .bashrc if not already present
-if ! grep -qF "bash ~/DeepEyeCrypto.sh" ~/.bashrc; then
-    echo "bash ~/DeepEyeCrypto.sh" >> ~/.bashrc
-    echo "Command added to ~/.bashrc. Restart Termux to see changes."
-else
-    echo "Command already exists in ~/.bashrc. No changes needed."
-fi
-
-# Initial Setup and Package Installation
-termux-setup-storage
-pkg update -y && pkg upgrade -y
-pkg install -y wget git unzip xfce4-appmenu-plugin ruby
-
-# Install macOS Theme and Icons
-mkdir -p /data/data/com.termux/files/home/.themes/ ~/.icons
-
-# macOS Theme
-git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git /data/data/com.termux/files/home/.themes/WhiteSur-gtk-theme
-cd /data/data/com.termux/files/home/.themes/WhiteSur-gtk-theme
-./install.sh
-
-# Extract macOS Themes
-cd /data/data/com.termux/files/home/.themes/
-for theme in WhiteSur-Dark WhiteSur-Dark-nord WhiteSur-Dark-solid WhiteSur-Dark-solid-nord WhiteSur-Light WhiteSur-Light-nord WhiteSur-Light-solid WhiteSur-Light-solid-nord; do
-    tar -xf /data/data/com.termux/files/home/WhiteSur-gtk-theme/release/$theme.tar.xz
-done
-
-# macOS Icons
-git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git ~/WhiteSur-icon-theme
-cd ~/WhiteSur-icon-theme
-./install.sh
-
-# candy-icons
-wget https://github.com/EliverLara/candy-icons/archive/refs/heads/master.zip -O ~/candy-icons.zip
-mkdir -p ~/.icons
-unzip ~/candy-icons.zip -d ~/.icons/
-
-# Set WhiteSur-dark Theme and Icons
-xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-dark"
-xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur-dark"
+# Icon Packs
+ICON_PACKS=(
+    "https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/master.tar.gz"
+    "https://github.com/numixproject/numix-icon-theme/archive/master.tar.gz"
+    "https://github.com/keeferrourke/la-capitaine-icon-theme/archive/master.tar.gz"
+    "https://github.com/vinceliuice/Tela-icon-theme/archive/master.tar.gz"
+    "https://github.com/daniruiz/flat-remix/archive/master.tar.gz"
+)
 
 # macOS Wallpapers
-cd /data/data/com.termux/files/home
-wget https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg -O big-sur.jpg
-wget https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg -O fusion.jpg
-wget https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg -O sonoma1.jpg
-wget https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg -O sonoma2.jpg
-wget https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg -O high-sierra.jpg
+MACOS_WALLPAPERS=(
+    "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg"
+    "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg"
+    "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg"
+    "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg"
+    "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg"
+)
 
-# Set Default Wallpaper
-xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s /data/data/com.termux/files/home/big-sur.jpg
-
-# Optional: Add Wallpaper Rotation
-while true; do
-    for wallpaper in /data/data/com.termux/files/home/*.jpg; do
-        xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$wallpaper"
-        sleep 3600  # Change every hour
+check_deps() {
+    local deps=(wget tar)
+    [ $STYLE -eq 5 ] && deps+=(eww xorg-xrdb git)
+    
+    for dep in "${deps[@]}"; do
+        if ! command -v $dep &> /dev/null; then
+            echo -e "${R}[!] Installing $dep...${W}"
+            pkg install -y $dep
+        fi
     done
-done &
+}
 
-exit 0
+install_icons() {
+    echo -e "${C}[*] Installing icon packs...${W}"
+    mkdir -p "$ICON_DIR"
+    
+    for pack in "${ICON_PACKS[@]}"; do
+        name=$(basename "$pack" | cut -d'-' -f1)
+        echo -e "${G}[+] Installing $name..."
+        wget -q --show-progress "$pack" -O "$name.tar.gz"
+        tar xzf "$name.tar.gz" -C "$ICON_DIR"
+        rm "$name.tar.gz"
+    done
+    
+    gtk-update-icon-cache -f -t "$ICON_DIR"/*
+}
+
+setup_wallpapers() {
+    echo -e "${C}[*] Setting up wallpapers...${W}"
+    mkdir -p "$WALLPAPER_DIR"
+    
+    # Theme wallpapers
+    wget -q --show-progress "${BASE_URL}${STYLE}/wallpaper.tar.gz"
+    tar xzf wallpaper.tar.gz -C "$WALLPAPER_DIR"
+    rm wallpaper.tar.gz
+    
+    # macOS extras
+    if [ $STYLE -eq 3 ]; then
+        for url in "${MACOS_WALLPAPERS[@]}"; do
+            wget -q --show-progress "$url" -P "$WALLPAPER_DIR"
+        done
+    fi
+}
+
+setup_cyberpunk() {
+    echo -e "${C}[*] Configuring Cyberpunk...${W}"
+    git clone https://github.com/sabamdarif/termux-cyberpunk-theme
+    cp -r termux-cyberpunk-theme/* ~/.config/
+    rm -rf termux-cyberpunk-theme
+}
+
+install_theme() {
+    echo -e "${C}[*] Installing theme components...${W}"
+    mkdir -p "$THEME_DIR"
+    
+    components=(icon theme)
+    for component in "${components[@]}"; do
+        wget -q --show-progress "${BASE_URL}${STYLE}/${component}.tar.gz"
+        tar xzf "${component}.tar.gz" -C "$THEME_DIR"
+        rm "${component}.tar.gz"
+    done
+    
+    [ $STYLE -eq 5 ] && setup_cyberpunk
+}
+
+main() {
+    clear
+    echo -e "${C}┌──────────────────────────┐"
+    echo -e "│ Termux XFCE Theme Manager │"
+    echo -e "└──────────────────────────┘${W}"
+    
+    check_deps
+    install_icons
+    setup_wallpapers
+    install_theme
+    
+    echo -e "\n${C}[√] Installation Complete!"
+    echo -e "${Y}Restart XFCE and:"
+    echo -e " - Select theme: ${THEME_DIR}/xfce-look-${STYLE}"
+    echo -e " - Choose icons from: ${ICON_DIR}"
+    echo -e " - Wallpapers available in: ${WALLPAPER_DIR}${W}"
+}
+
+main
