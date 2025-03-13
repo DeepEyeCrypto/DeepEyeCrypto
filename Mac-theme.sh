@@ -9,134 +9,81 @@ C="\033[1;36m"
 W="\033[0m"
 
 # Configuration
+STYLE=${1:-3}  # Default to macOS theme
+BASE_URL="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_"
 WALLPAPER_DIR="$PREFIX/share/backgrounds"
 ICON_DIR="$HOME/.icons"
 THEME_DIR="$HOME/.themes"
-APPSTORE_DIR="$PREFIX/opt/appstore"
-ZSHRC_FILE="$HOME/.zshrc"
-
-# Theme Packages
-THEME_PACKS=(
-    [2]="https://github.com/nana-4/materia-theme/releases/download/v2023-12-06/materia-dark.tar.xz"
-    [3]="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_3/theme.tar.gz"
-    [5]="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_5/theme.tar.gz"
-    [6]="https://github.com/vinceliuice/WhiteSur-gtk-theme/releases/download/2.0.0/WhiteSur-Dark.tar.xz"
-)
 
 # Icon Packs
 ICON_PACKS=(
     "https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/master.tar.gz"
     "https://github.com/numixproject/numix-icon-theme/archive/master.tar.gz"
     "https://github.com/keeferrourke/la-capitaine-icon-theme/archive/master.tar.gz"
+    "https://github.com/vinceliuice/Tela-icon-theme/archive/master.tar.gz"
+    "https://github.com/daniruiz/flat-remix/archive/master.tar.gz"
 )
 
-# Wallpaper URLs
-MODERN_WALLPAPERS=(
-    "https://4kwallpapers.com/images/wallpapers/abstract-dark-3840x2160-12465.jpg"
-    "https://4kwallpapers.com/images/wallpapers/minimalism-dark-abstract-7680x4320-12157.jpg"
-)
+# macOS Wallpapers
 MACOS_WALLPAPERS=(
     "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg"
+    "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg"
     "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg"
+    "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg"
+    "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg"
 )
-CYBER_WALLPAPERS=(
-    "https://4kwallpapers.com/images/wallpapers/cyberpunk-edgerunners-cityscape-neon-lights-3840x2160-10018.jpg"
-)
 
-# Initial System Setup
-echo -e "${C}[*] Starting System Setup...${W}"
-pkg update -y && pkg upgrade -y
-termux-setup-storage
-pkg install -y x11-repo termux-x11-nightly pulseaudio xfce4 tur-repo \
-    firefox code-oss chromium git wget
-
-# Install DeepEyeCrypto
-echo -e "${C}[*] Installing DeepEyeCrypto...${W}"
-cd ~
-wget -q --show-progress https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/main/DeepEyeCrypto.sh
-chmod +x DeepEyeCrypto.sh
-./DeepEyeCrypto.sh
-
-# Theme Selection
-theme_selection() {
-    clear
-    echo -e "${C}┌────────────────────────────┐"
-    echo -e "│ Termux XFCE Ultimate By Ejaj Ali │"
-    echo -e "└────────────────────────────┘${W}"
+initial_setup() {
+    echo -e "${C}[*] Starting initial setup...${W}"
     
-    while true; do
-        echo -e "\n${Y}Available Themes:"
-        echo -e "  ${B}2${W}) Modern Dark (Materia)"
-        echo -e "  ${B}3${W}) macOS Style"
-        echo -e "  ${B}5${W}) Cyberpunk"
-        echo -e "  ${B}6${W}) WhiteSur Dark (Default)"
-        echo -ne "${Y}Enter theme number [2/3/5/6]: ${W}"
-        read style_input
-        
-        [ -z "$style_input" ] && style_input=6
-        
-        if [[ "$style_input" =~ ^(2|3|5|6)$ ]]; then
-            STYLE=$style_input
-            break
-        else
-            echo -e "${R}Invalid selection! Please enter 2, 3, 5, or 6.${W}"
-        fi
-    done
+    # Update packages
+    echo -e "${G}[+] Updating packages...${W}"
+    pkg update -y && pkg upgrade -y
+    
+    # Setup storage
+    echo -e "${G}[+] Setting up storage...${W}"
+    termux-setup-storage
+    echo -e "${Y}[!] Please allow storage permission when prompted!${W}"
+    
+    # Install X11 and core components
+    echo -e "${G}[+] Installing X11 components...${W}"
+    pkg install x11-repo -y
+    pkg install termux-x11-nightly -y
+    pkg install pulseaudio -y
+    
+    # Install desktop environment
+    echo -e "${G}[+] Installing XFCE4...${W}"
+    pkg install xfce4 -y
+    
+    # Install additional software
+    echo -e "${G}[+] Installing applications...${W}"
+    pkg install tur-repo -y
+    pkg install firefox chromium code-oss git wget -y
+    
+    # Install theme dependencies
+    echo -e "${G}[+] Installing theme dependencies...${W}"
+    pkg install zsh -y
 }
 
-# Dependency Check
 check_deps() {
-    local deps=(wget tar xz-utils python)
-    [ $STYLE -eq 5 ] && deps+=(eww xorg-xrdb)
-    deps+=(zsh curl)
+    local deps=(wget tar)
+    [ $STYLE -eq 5 ] && deps+=(eww xorg-xrdb git)
     
-    echo -e "${C}[*] Checking dependencies...${W}"
     for dep in "${deps[@]}"; do
         if ! command -v $dep &> /dev/null; then
-            echo -e "${G}[+] Installing $dep...${W}"
+            echo -e "${R}[!] Installing $dep...${W}"
             pkg install -y $dep
         fi
     done
-
-    if ! pip show pygobject >/dev/null 2>&1; then
-        echo -e "${G}[+] Installing Python dependencies...${W}"
-        pip install pygobject pillow
-    fi
 }
 
-# Zsh Setup
-install_zsh() {
-    echo -e "${C}[*] Configuring Zsh...${W}"
-    if ! command -v zsh &> /dev/null; then
-        pkg install -y zsh
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    fi
-
-    cat > "$ZSHRC_FILE" <<EOL
-# Aliases
-alias themes='xfce4-appearance-settings'
-alias iconthemes='cd $ICON_DIR && ls'
-alias wallpapers='cd $WALLPAPER_DIR && ls'
-alias appstore='python $APPSTORE_DIR/src/gtk_app_store.py'
-
-# Oh My Zsh
-export ZSH="\$HOME/.oh-my-zsh"
-ZSH_THEME="agnoster"
-plugins=(git zsh-syntax-highlighting)
-source \$ZSH/oh-my-zsh.sh
-EOL
-
-    [ "$SHELL" != "/data/data/com.termux/files/usr/bin/zsh" ] && chsh -s zsh
-}
-
-# Icon Installation
 install_icons() {
     echo -e "${C}[*] Installing icon packs...${W}"
     mkdir -p "$ICON_DIR"
     
     for pack in "${ICON_PACKS[@]}"; do
         name=$(basename "$pack" | cut -d'-' -f1)
-        echo -e "${G}[+] Installing $name icons...${W}"
+        echo -e "${G}[+] Installing $name..."
         wget -q --show-progress "$pack" -O "$name.tar.gz"
         tar xzf "$name.tar.gz" -C "$ICON_DIR"
         rm "$name.tar.gz"
@@ -145,98 +92,84 @@ install_icons() {
     gtk-update-icon-cache -f -t "$ICON_DIR"/*
 }
 
-# Wallpaper Setup
 setup_wallpapers() {
-    echo -e "${C}[*] Configuring wallpapers...${W}"
+    echo -e "${C}[*] Setting up wallpapers...${W}"
     mkdir -p "$WALLPAPER_DIR"
     
-    case $STYLE in
-        2) for url in "${MODERN_WALLPAPERS[@]}"; do wget -q --show-progress "$url" -P "$WALLPAPER_DIR"; done ;;
-        3) for url in "${MACOS_WALLPAPERS[@]}"; do wget -q --show-progress "$url" -P "$WALLPAPER_DIR"; done ;;
-        5) for url in "${CYBER_WALLPAPERS[@]}"; do wget -q --show-progress "$url" -P "$WALLPAPER_DIR"; done ;;
-        6) wget -q --show-progress "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/master/backgrounds/monterey/WhiteSur-monterey.png" -P "$WALLPAPER_DIR" ;;
-    esac
+    # Theme wallpapers
+    wget -q --show-progress "${BASE_URL}${STYLE}/wallpaper.tar.gz"
+    tar xzf wallpaper.tar.gz -C "$WALLPAPER_DIR"
+    rm wallpaper.tar.gz
+    
+    # macOS extras
+    if [ $STYLE -eq 3 ]; then
+        for url in "${MACOS_WALLPAPERS[@]}"; do
+            wget -q --show-progress "$url" -P "$WALLPAPER_DIR"
+        done
+    fi
 }
 
-# Theme Installation
+setup_cyberpunk() {
+    echo -e "${C}[*] Configuring Cyberpunk...${W}"
+    git clone https://github.com/sabamdarif/termux-cyberpunk-theme
+    cp -r termux-cyberpunk-theme/* ~/.config/
+    rm -rf termux-cyberpunk-theme
+}
+
 install_theme() {
-    echo -e "${C}[*] Installing theme...${W}"
+    echo -e "${C}[*] Installing theme components...${W}"
     mkdir -p "$THEME_DIR"
     
-    case $STYLE in
-        2)
-            echo -e "${G}[+] Installing Materia Dark...${W}"
-            wget -q --show-progress "${THEME_PACKS[2]}" -O materia-dark.tar.xz
-            tar xJf materia-dark.tar.xz -C "$THEME_DIR"
-            xfconf-query -c xsettings -p /Net/ThemeName -s "Materia-dark"
-            xfconf-query -c xfwm4 -p /general/theme -s "Materia-dark"
-            ;;
-        3)
-            echo -e "${G}[+] Installing macOS theme...${W}"
-            wget -q --show-progress "${THEME_PACKS[3]}" -O macos-theme.tar.gz
-            tar xzf macos-theme.tar.gz -C "$THEME_DIR"
-            ;;
-        5)
-            echo -e "${G}[+] Installing Cyberpunk theme...${W}"
-            wget -q --show-progress "${THEME_PACKS[5]}" -O cyberpunk-theme.tar.gz
-            tar xzf cyberpunk-theme.tar.gz -C "$THEME_DIR"
-            git clone -q https://github.com/sabamdarif/termux-cyberpunk-theme
-            cp -r termux-cyberpunk-theme/* ~/.config/
-            rm -rf termux-cyberpunk-theme
-            ;;
-        6)
-            echo -e "${G}[+] Installing WhiteSur Dark...${W}"
-            wget -q --show-progress "${THEME_PACKS[6]}" -O WhiteSur-Dark.tar.xz
-            tar xJf WhiteSur-Dark.tar.xz -C "$THEME_DIR"
-            xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark"
-            xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark"
-            ;;
-    esac
-    rm -f *.tar.*
-}
-
-# App Store Installation
-install_app_store() {
-    echo -e "${C}[*] Installing Termux App Store...${W}"
-    git clone -q --depth 1 https://github.com/sabamdarif/Termux-AppStore "$APPSTORE_DIR"
+    components=(icon theme)
+    for component in "${components[@]}"; do
+        wget -q --show-progress "${BASE_URL}${STYLE}/${component}.tar.gz"
+        tar xzf "${component}.tar.gz" -C "$THEME_DIR"
+        rm "${component}.tar.gz"
+    done
     
-    cat > "$PREFIX/share/applications/org.termux.appstore.desktop" <<EOL
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Termux App Store
-Exec=python $APPSTORE_DIR/src/gtk_app_store.py
-Icon=system-software-install
-Categories=System;
-EOL
-    cp "$PREFIX/share/applications/org.termux.appstore.desktop" ~/Desktop/
+    [ $STYLE -eq 5 ] && setup_cyberpunk
 }
 
-# Main Execution
-theme_selection
-check_deps
-install_zsh
-install_icons
-setup_wallpapers
-install_theme
-install_app_store
+final_steps() {
+    echo -e "${C}[*] Finalizing setup...${W}"
+    cd ~
+    wget -q --show-progress https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/DeepEyeCrypto.sh
+    chmod +x DeepEyeCrypto.sh
+    echo -e "${Y}[!] Warning: About to run external script DeepEyeCrypto.sh${W}"
+    bash ~/DeepEyeCrypto.sh
+}
 
-# Completion Message
-echo -e "\n${C}[√] Installation Complete!${W}"
-echo -e "${Y}Selected Theme:"
-case $STYLE in
-    2) echo "Modern Dark (Materia)" ;;
-    3) echo "macOS Style" ;;
-    5) echo "Cyberpunk" ;;
-    6) echo "WhiteSur Dark" ;;
-esac
+main() {
+    clear
+    echo -e "${C}┌──────────────────────────────────┐"
+    echo -e "│ Termux XFCE Complete Setup Script │"
+    echo -e "└──────────────────────────────────┘${W}"
+    
+    initial_setup
+    check_deps
+    
+    # Set Zsh as default shell
+    if command -v zsh &>/dev/null; then
+        echo -e "${C}[*] Configuring Zsh...${W}"
+        chsh -s zsh 2>/dev/null || echo -e "${R}Failed to set Zsh as default shell.${W}"
+    fi
+    
+    install_icons
+    setup_wallpapers
+    install_theme
+    final_steps
+    
+    echo -e "\n${C}[√] Installation Complete!"
+    echo -e "${Y}System components:"
+    echo -e " - XFCE4 Desktop Environment"
+    echo -e " - Firefox, Chromium, and Code-OSS"
+    echo -e " - Termux X11 and PulseAudio"
+    echo -e "\nTheme components:"
+    echo -e " - Selected theme: ${THEME_DIR}/xfce-look-${STYLE}"
+    echo -e " - Icon packs: ${ICON_DIR}"
+    echo -e " - Wallpapers: ${WALLPAPER_DIR}"
+    echo -e " - Zsh configured as default shell"
+    echo -e "\n${R}Note: Restart Termux session for all changes to take effect!${W}"
+}
 
-echo -e "\n${Y}Commands:"
-echo -e "  themes     - Open appearance settings"
-echo -e "  appstore   - Launch application store"
-echo -e "  iconthemes - List installed icon packs"
-echo -e "  wallpapers - View installed backgrounds"
-echo -e "  zsh        - Restart Zsh shell"
-echo -e "\n${B}Start XFCE with:"
-echo -e "  termux-x11 :1 &"
-echo -e "  xfce4-session${W}"
+main
