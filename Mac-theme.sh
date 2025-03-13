@@ -10,7 +10,6 @@ W="\033[0m"
 
 # Configuration
 STYLE=${1:-6}  # Default to WhiteSur Dark
-BASE_URL="https://github.com/vinceliuice/WhiteSur-gtk-theme/releases/download/2.0.0/WhiteSur-Dark.tar.xz"
 WALLPAPER_DIR="$PREFIX/share/backgrounds"
 ICON_DIR="$HOME/.icons"
 THEME_DIR="$HOME/.themes"
@@ -19,9 +18,10 @@ ZSHRC_FILE="$HOME/.zshrc"
 
 # Theme Packages
 THEME_PACKS=(
-    [3]="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_3/theme.tar.gz"
-    [5]="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_5/theme.tar.gz"
-    [6]="$BASE_URL"
+    [2]="https://github.com/nana-4/materia-theme/releases/download/v2023-12-06/materia-dark.tar.xz"    # Modern Dark
+    [3]="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_3/theme.tar.gz"       # macOS
+    [5]="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_5/theme.tar.gz"       # Cyberpunk
+    [6]="https://github.com/vinceliuice/WhiteSur-gtk-theme/releases/download/2.0.0/WhiteSur-Dark.tar.xz"         # WhiteSur Dark
 )
 
 # Icon Packs
@@ -31,11 +31,17 @@ ICON_PACKS=(
     "https://github.com/keeferrourke/la-capitaine-icon-theme/archive/master.tar.gz"
 )
 
-# macOS Wallpapers
+# Wallpaper URLs
+MODERN_WALLPAPERS=(
+    "https://4kwallpapers.com/images/wallpapers/abstract-dark-3840x2160-12465.jpg"
+    "https://4kwallpapers.com/images/wallpapers/minimalism-dark-abstract-7680x4320-12157.jpg"
+)
 MACOS_WALLPAPERS=(
     "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg"
-    "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg"
     "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg"
+)
+CYBER_WALLPAPERS=(
+    "https://4kwallpapers.com/images/wallpapers/cyberpunk-edgerunners-cityscape-neon-lights-3840x2160-10018.jpg"
 )
 
 check_deps() {
@@ -104,8 +110,18 @@ setup_wallpapers() {
     mkdir -p "$WALLPAPER_DIR"
     
     case $STYLE in
+        2)  # Modern Dark
+            for url in "${MODERN_WALLPAPERS[@]}"; do
+                wget -q --show-progress "$url" -P "$WALLPAPER_DIR"
+            done
+            ;;
         3)  # macOS
             for url in "${MACOS_WALLPAPERS[@]}"; do
+                wget -q --show-progress "$url" -P "$WALLPAPER_DIR"
+            done
+            ;;
+        5)  # Cyberpunk
+            for url in "${CYBER_WALLPAPERS[@]}"; do
                 wget -q --show-progress "$url" -P "$WALLPAPER_DIR"
             done
             ;;
@@ -120,18 +136,28 @@ install_theme() {
     mkdir -p "$THEME_DIR"
     
     case $STYLE in
+        2)  # Modern Dark
+            echo -e "${G}[+] Installing Materia Dark...${W}"
+            wget -q --show-progress "${THEME_PACKS[2]}" -O materia-dark.tar.xz
+            tar xJf materia-dark.tar.xz -C "$THEME_DIR"
+            xfconf-query -c xsettings -p /Net/ThemeName -s "Materia-dark"
+            xfconf-query -c xfwm4 -p /general/theme -s "Materia-dark"
+            ;;
         3)  # macOS
-            wget -q --show-progress "${THEME_PACKS[3]}" 
-            tar xzf theme.tar.gz -C "$THEME_DIR"
+            echo -e "${G}[+] Installing macOS theme...${W}"
+            wget -q --show-progress "${THEME_PACKS[3]}" -O macos-theme.tar.gz
+            tar xzf macos-theme.tar.gz -C "$THEME_DIR"
             ;;
         5)  # Cyberpunk
-            wget -q --show-progress "${THEME_PACKS[5]}"
-            tar xzf theme.tar.gz -C "$THEME_DIR"
+            echo -e "${G}[+] Installing Cyberpunk theme...${W}"
+            wget -q --show-progress "${THEME_PACKS[5]}" -O cyberpunk-theme.tar.gz
+            tar xzf cyberpunk-theme.tar.gz -C "$THEME_DIR"
             git clone https://github.com/sabamdarif/termux-cyberpunk-theme
             cp -r termux-cyberpunk-theme/* ~/.config/
             rm -rf termux-cyberpunk-theme
             ;;
         6)  # WhiteSur Dark
+            echo -e "${G}[+] Installing WhiteSur Dark...${W}"
             wget -q --show-progress "${THEME_PACKS[6]}" -O WhiteSur-Dark.tar.xz
             tar xJf WhiteSur-Dark.tar.xz -C "$THEME_DIR"
             xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark"
@@ -160,7 +186,7 @@ EOL
 main() {
     clear
     echo -e "${C}┌────────────────────────────┐"
-    echo -e "│ Termux XFCE Ultimate Setup │"
+    echo -e "│ Termux XFCE Ultimate By Ejaj Ali │"
     echo -e "└────────────────────────────┘${W}"
     
     check_deps
@@ -171,11 +197,19 @@ main() {
     install_app_store
     
     echo -e "\n${C}[√] Installation Complete!${W}"
-    echo -e "${Y}Restart Termux and use these commands:"
-    echo -e " - themes: Open appearance settings"
-    echo -e " - appstore: Launch application store"
-    echo -e " - iconthemes: List icon packs"
-    echo -e " - wallpapers: View installed wallpapers${W}"
+    echo -e "${Y}Selected Theme:"
+    case $STYLE in
+        2) echo "Modern Dark (Materia)" ;;
+        3) echo "macOS Style" ;;
+        5) echo "Cyberpunk" ;;
+        6) echo "WhiteSur Dark" ;;
+    esac
+    echo -e "\n${Y}Commands:"
+    echo -e "  themes     - Open appearance settings"
+    echo -e "  appstore   - Launch application store"
+    echo -e "  iconthemes - List installed icon packs"
+    echo -e "  wallpapers - View installed backgrounds"
+    echo -e "  zsh        - Restart Zsh shell${W}"
 }
 
 main
