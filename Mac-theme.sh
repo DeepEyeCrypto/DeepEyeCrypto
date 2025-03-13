@@ -1,146 +1,181 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Termux XFCE WhiteSur Enhanced Theme Script
-# Includes: DPI scaling, font installation, and panel configuration
+# Colors
+R="\033[1;31m"
+G="\033[1;32m"
+Y="\033[1;33m"
+B="\033[1;34m"
+C="\033[1;36m"
+W="\033[0m"
 
-# Enable error handling and logging
-set -euo pipefail
-exec > >(tee "${HOME}/whitesur-install.log") 2>&1
+# Configuration
+STYLE=${1:-6}  # Default to WhiteSur Dark
+BASE_URL="https://github.com/vinceliuice/WhiteSur-gtk-theme/releases/download/2.0.0/WhiteSur-Dark.tar.xz"
+WALLPAPER_DIR="$PREFIX/share/backgrounds"
+ICON_DIR="$HOME/.icons"
+THEME_DIR="$HOME/.themes"
+APPSTORE_DIR="$PREFIX/opt/appstore"
+ZSHRC_FILE="$HOME/.zshrc"
 
-# Configuration variables
-THEME_DIR="${HOME}/.local/share/themes"
-ICON_DIR="${HOME}/.local/share/icons"
-FONT_DIR="${HOME}/.local/share/fonts"
-WALLPAPER_DIR="${HOME}/WhiteSur-Wallpapers"
-WORK_DIR="${HOME}/WhiteSur-temp"
+# Theme Packages
+THEME_PACKS=(
+    [3]="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_3/theme.tar.gz"
+    [5]="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_5/theme.tar.gz"
+    [6]="$BASE_URL"
+)
 
-# Detect screen density for mobile displays
-detect_scaling() {
-    local density=96
-    if [ -n "$(command -v xdpyinfo)" ]; then
-        local res=$(xdpyinfo | grep -oP "dimensions:\s+\K\d+x\d+")
-        local width=${res/x*/}
-        [ $width -lt 1080 ] && density=120
-    fi
-    echo $density
-}
+# Icon Packs
+ICON_PACKS=(
+    "https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/master.tar.gz"
+    "https://github.com/numixproject/numix-icon-theme/archive/master.tar.gz"
+    "https://github.com/keeferrourke/la-capitaine-icon-theme/archive/master.tar.gz"
+)
 
-# Install enhanced dependencies
-install_deps() {
-    echo "📦 Updating packages and installing dependencies..."
-    pkg update -y && pkg install -y \
-        git wget curl python libsass \
-        xfce4-settings xfce4-panel-profiles \
-        x11-repo termux-x11-nightly \
-        fontconfig scrot imagemagick
+# macOS Wallpapers
+MACOS_WALLPAPERS=(
+    "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg"
+    "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg"
+    "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg"
+)
+
+check_deps() {
+    local deps=(wget tar xz-utils python git)
+    [ $STYLE -eq 5 ] && deps+=(eww xorg-xrdb)
+    deps+=(zsh curl)
     
-    # Install patched fonts
-    mkdir -p "${FONT_DIR}"
-    wget -qO- https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SanFrancisco/SF-Pro.ttf \
-        -O "${FONT_DIR}/SF-Pro.ttf"
-    fc-cache -fv
-}
-
-# Setup working environment
-setup_dirs() {
-    echo "📂 Creating directories..."
-    mkdir -p "${WORK_DIR}" "${WALLPAPER_DIR}" \
-        "${THEME_DIR}" "${ICON_DIR}" "${FONT_DIR}"
-    cd "${WORK_DIR}"
-}
-
-# Clone and build themes
-install_themes() {
-    echo "🎨 Installing themes..."
-    local repos=(
-        "WhiteSur-wallpapers https://github.com/vinceliuice/WhiteSur-wallpapers"
-        "WhiteSur-gtk-theme https://github.com/vinceliuice/WhiteSur-gtk-theme"
-        "WhiteSur-icon-theme https://github.com/vinceliuice/WhiteSur-icon-theme"
-    )
-
-    for repo in "${repos[@]}"; do
-        local name=${repo%% *}
-        local url=${repo#* }
-        echo "🔧 Cloning ${name}..."
-        git clone --depth 1 "${url}" || {
-            echo "⚠️ Failed to clone ${name}, using fallback..."
-            wget -qO- "${url}/archive/main.tar.gz" | tar xz --strip=1
-        }
+    echo -e "${C}[*] Checking dependencies...${W}"
+    for dep in "${deps[@]}"; do
+        if ! command -v $dep &> /dev/null; then
+            echo -e "${G}[+] Installing $dep...${W}"
+            pkg install -y $dep
+        fi
     done
 
-    # GTK Theme with mobile optimizations
-    cd WhiteSur-gtk-theme
-    ./install.sh -t all -c Dark --tweaks "rimless macos" \
-        --dest "${THEME_DIR}" --size standard --transparent
-
-    # Icon Theme with smaller sizes
-    cd ../WhiteSur-icon-theme
-    ./install.sh -b --black --dest "${ICON_DIR}" --size 32x32
-
-    # Wallpapers
-    cd ../WhiteSur-wallpapers
-    ./install.sh --dest "${HOME}/.local/share/backgrounds"
+    if ! pip show pygobject >/dev/null 2>&1; then
+        echo -e "${G}[+] Installing Python dependencies...${W}"
+        pip install pygobject pillow
+    fi
 }
 
-# Configure XFCE desktop
-configure_xfce() {
-    echo "🖥  Configuring XFCE4..."
-    local density=$(detect_scaling)
-
-    # Apply XFCE settings
-    xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark"
-    xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
-    xfconf-query -c xsettings -p /Gtk/FontName -s "SF Pro 10"
-    xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark"
-    xfconf-query -c xfwm4 -p /general/title_font -s "SF Pro Bold 10"
-    xfconf-query -c xsettings -p /Xft/DPI -n -t int -s $((density * 1024))
-
-    # Panel configuration (macOS-like layout)
-    cat > "${HOME}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml" <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<channel name="xfce4-panel" version="1.0">
-  <property name="configver" type="int" value="2"/>
-  <property name="panels" type="array">
-    <value type="int" value="1"/>
-    <property name="panel-1" type="empty">
-      <property name="position" type="string" value="p=6;x=0;y=0"/>
-      <property name="length" type="uint" value="100"/>
-      <property name="position-locked" type="bool" value="true"/>
-      <property name="plugins" type="array">
-        <value type="string" value="applicationsmenu"/>
-        <value type="string" value="tasklist"/>
-        <value type="string" value="systray"/>
-        <value type="string" value="clock"/>
-        <value type="string" value="actions"/>
-      </property>
-    </property>
-  </property>
-</channel>
-EOF
-
-    # Set random wallpaper with imagemagick optimization
-    local wall=$(find "${WALLPAPER_DIR}" -type f | shuf -n 1)
-    convert "${wall}" -resize 1080x1920^ -gravity center -extent 1080x1920 \
-        "${HOME}/.cache/wallpaper-optimized.jpg"
-    xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image \
-        -s "${HOME}/.cache/wallpaper-optimized.jpg"
-}
-
-# Post-installation cleanup and checks
-finalize() {
-    echo "🧹 Cleaning up..."
-    rm -rf "${WORK_DIR}"
+install_zsh() {
+    echo -e "${C}[*] Setting up Zsh...${W}"
     
-    echo -e "\n✅ Installation Complete! Recommended next steps:"
-    echo "1. Restart Termux-X11 session"
-    echo "2. Run 'xfce4-panel-profiles' to load custom layouts"
-    echo "3. Adjust DPI in ~/.Xresources if needed"
-    echo "4. Wallpapers available at: ${WALLPAPER_DIR}"
+    if ! command -v zsh &> /dev/null; then
+        pkg install -y zsh
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    fi
+
+    cat > "$ZSHRC_FILE" <<EOL
+# Aliases
+alias themes='xfce4-appearance-settings'
+alias iconthemes='cd $ICON_DIR && ls'
+alias wallpapers='cd $WALLPAPER_DIR && ls'
+alias appstore='python $APPSTORE_DIR/src/gtk_app_store.py'
+
+# Oh My Zsh
+export ZSH="\$HOME/.oh-my-zsh"
+ZSH_THEME="agnoster"
+plugins=(git zsh-syntax-highlighting)
+source \$ZSH/oh-my-zsh.sh
+EOL
+
+    if [ "$SHELL" != "/data/data/com.termux/files/usr/bin/zsh" ]; then
+        chsh -s zsh
+    fi
 }
 
-# Main execution flow
-install_deps
-setup_dirs
-install_themes
-configure_xfce
-finalize
+install_icons() {
+    echo -e "${C}[*] Installing icon packs...${W}"
+    mkdir -p "$ICON_DIR"
+    
+    for pack in "${ICON_PACKS[@]}"; do
+        name=$(basename "$pack" | cut -d'-' -f1)
+        echo -e "${G}[+] Installing $name icons..."
+        wget -q --show-progress "$pack" -O "$name.tar.gz"
+        tar xzf "$name.tar.gz" -C "$ICON_DIR"
+        rm "$name.tar.gz"
+    done
+    
+    gtk-update-icon-cache -f -t "$ICON_DIR"/*
+}
+
+setup_wallpapers() {
+    echo -e "${C}[*] Configuring wallpapers...${W}"
+    mkdir -p "$WALLPAPER_DIR"
+    
+    case $STYLE in
+        3)  # macOS
+            for url in "${MACOS_WALLPAPERS[@]}"; do
+                wget -q --show-progress "$url" -P "$WALLPAPER_DIR"
+            done
+            ;;
+        6)  # WhiteSur
+            wget -q --show-progress "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/master/backgrounds/monterey/WhiteSur-monterey.png" -P "$WALLPAPER_DIR"
+            ;;
+    esac
+}
+
+install_theme() {
+    echo -e "${C}[*] Installing theme...${W}"
+    mkdir -p "$THEME_DIR"
+    
+    case $STYLE in
+        3)  # macOS
+            wget -q --show-progress "${THEME_PACKS[3]}" 
+            tar xzf theme.tar.gz -C "$THEME_DIR"
+            ;;
+        5)  # Cyberpunk
+            wget -q --show-progress "${THEME_PACKS[5]}"
+            tar xzf theme.tar.gz -C "$THEME_DIR"
+            git clone https://github.com/sabamdarif/termux-cyberpunk-theme
+            cp -r termux-cyberpunk-theme/* ~/.config/
+            rm -rf termux-cyberpunk-theme
+            ;;
+        6)  # WhiteSur Dark
+            wget -q --show-progress "${THEME_PACKS[6]}" -O WhiteSur-Dark.tar.xz
+            tar xJf WhiteSur-Dark.tar.xz -C "$THEME_DIR"
+            xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark"
+            xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark"
+            ;;
+    esac
+    rm -f *.tar.*
+}
+
+install_app_store() {
+    echo -e "${C}[*] Installing Termux App Store...${W}"
+    git clone --depth 1 https://github.com/sabamdarif/Termux-AppStore "$APPSTORE_DIR"
+    
+    cat > "$PREFIX/share/applications/org.termux.appstore.desktop" <<EOL
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Termux App Store
+Exec=python $APPSTORE_DIR/src/gtk_app_store.py
+Icon=system-software-install
+Categories=System;
+EOL
+    cp "$PREFIX/share/applications/org.termux.appstore.desktop" ~/Desktop/
+}
+
+main() {
+    clear
+    echo -e "${C}┌────────────────────────────┐"
+    echo -e "│ Termux XFCE Ultimate Setup │"
+    echo -e "└────────────────────────────┘${W}"
+    
+    check_deps
+    install_zsh
+    install_icons
+    setup_wallpapers
+    install_theme
+    install_app_store
+    
+    echo -e "\n${C}[√] Installation Complete!${W}"
+    echo -e "${Y}Restart Termux and use these commands:"
+    echo -e " - themes: Open appearance settings"
+    echo -e " - appstore: Launch application store"
+    echo -e " - iconthemes: List icon packs"
+    echo -e " - wallpapers: View installed wallpapers${W}"
+}
+
+main
