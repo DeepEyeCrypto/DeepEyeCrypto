@@ -47,15 +47,10 @@ initial_setup() {
     # Update packages
     pkg update -y && pkg upgrade -y
     
-    # Setup storage
-    termux-setup-storage
-    echo -e "${Y}[!] Grant storage permissions when prompted!${W}"
-    sleep 2
-
     # Install core components
     pkg install -y x11-repo termux-x11-nightly pulseaudio \
         xfce4 tur-repo firefox chromium code-oss git wget \
-        unzip meson ninja imagemagick lxappendance sassc \
+        unzip meson ninja imagemagick lxappearance sassc \
         libxml2 glib binutils
 
     # Create directories
