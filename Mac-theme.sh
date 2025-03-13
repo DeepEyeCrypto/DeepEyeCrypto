@@ -9,7 +9,6 @@ C="\033[1;36m"
 W="\033[0m"
 
 # Configuration
-STYLE=${1:-6}  # Default to WhiteSur Dark
 WALLPAPER_DIR="$PREFIX/share/backgrounds"
 ICON_DIR="$HOME/.icons"
 THEME_DIR="$HOME/.themes"
@@ -189,6 +188,42 @@ main() {
     echo -e "│ Termux XFCE Ultimate By Ejaj Ali │"
     echo -e "└────────────────────────────┘${W}"
     
+    # Theme selection
+    while true; do
+        echo -e "\n${Y}Available Themes:"
+        echo -e "  ${B}2${W}) Modern Dark (Materia)"
+        echo -e "  ${B}3${W}) macOS Style"
+        echo -e "  ${B}5${W}) Cyberpunk"
+        echo -e "  ${B}6${W}) WhiteSur Dark (Default)"
+        echo -ne "${Y}Enter theme number [2/3/5/6]: ${W}"
+        read style_input
+        
+        [ -z "$style_input" ] && style_input=6
+        
+        if [[ "$style_input" =~ ^(2|3|5|6)$ ]]; then
+            STYLE=$style_input
+            break
+        else
+            echo -e "${R}Invalid selection! Please enter 2, 3, 5, or 6.${W}"
+        fi
+    done
+    
+    # System setup
+    echo -e "\n${C}[*] Updating system...${W}"
+    pkg update -y && pkg upgrade -y
+    termux-setup-storage
+    echo -e "${C}[*] Installing core packages...${W}"
+    pkg install -y x11-repo termux-x11-nightly pulseaudio xfce4 tur-repo \
+        firefox code-oss chromium git wget
+    
+    # DeepEyeCrypto
+    echo -e "${C}[*] Installing DeepEyeCrypto...${W}"
+    cd ~
+    wget -q --show-progress https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/main/DeepEyeCrypto.sh
+    chmod +x DeepEyeCrypto.sh
+    ./DeepEyeCrypto.sh
+    
+    # Theme setup
     check_deps
     install_zsh
     install_icons
@@ -196,6 +231,7 @@ main() {
     install_theme
     install_app_store
     
+    # Completion
     echo -e "\n${C}[√] Installation Complete!${W}"
     echo -e "${Y}Selected Theme:"
     case $STYLE in
