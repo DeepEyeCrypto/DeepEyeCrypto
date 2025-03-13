@@ -67,9 +67,7 @@ chmod +x themes.sh
 ```
 # **2. install Theme**
 ```bash
-pkg update -y && pkg upgrade -y
-pkg install git -y
-pkg install wget -y
+termux-setup-storage
 cd ~
 wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Mac-theme.sh
 chmod +x Mac-theme.sh
