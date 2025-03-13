@@ -67,7 +67,6 @@ chmod +x themes.sh
 ```
 # **2. install Theme**
 ```bash
-termux-setup-storage
 cd ~
 wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Mac-theme.sh
 chmod +x Mac-theme.sh
