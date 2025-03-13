@@ -58,20 +58,6 @@ show_menu() {
     echo -e "${R} 0) Exit${W}"
 }
 
-initial_setup() {
-    echo -e "${C}[*] Starting system setup...${W}"
-    pkg update -y && pkg upgrade -y
-    termux-setup-storage
-    pkg install -y x11-repo termux-x11-nightly pulseaudio xfce4 \
-        tur-repo firefox chromium code-oss git wget unzip \
-        meson ninja imagemagick lxappearance
-}
-
-install_deps() {
-    echo -e "${C}[*] Installing dependencies...${W}"
-    pkg install -y zsh python libxml2 glib binutils
-    pip install --user sassc
-}
 
 install_fonts() {
     echo -e "${C}[*] Installing macOS fonts...${W}"
