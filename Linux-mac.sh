@@ -35,7 +35,7 @@ termux-setup-storage
 
 # Phase 2: Core installation
 print_status "Installing XFCE components"
-pkg install -y x11-repo termux-x11-nightly pulseaudio xfce4 \
+pkg install x11-repo termux-x11-nightly pulseaudio xfce4 \
     tur-repo firefox code-oss chromium git wget
 
 # Phase 3: Theming setup
