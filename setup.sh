@@ -181,7 +181,7 @@ function set_config_dir() {
     esac
 }
 
-echo -e "\n\033[1;32mCreating installation script...\033[0m"
+echo -e "\n\033[1;36mCreating installation script...\033[0m"
 [ -f ~/setup.sh ] && mv ~/setup.sh ~/setup.sh.bak
 
 cat <<EOF > ~/setup.sh
