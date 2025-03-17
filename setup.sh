@@ -17,6 +17,9 @@ WALLPAPER_DIR="$PREFIX/share/backgrounds/xfce"
 echo -e "\n\033[1;32mStarting system update...\033[0m"
 pkg update -y && pkg upgrade -y
 
+echo -e "\n\033[1;32mInstalling core dependencies...\033[0m"
+pkg install -y coreutils  # Fixes getent error
+
 echo -e "\n\033[1;32mSetting up storage...\033[0m"
 termux-setup-storage
 
@@ -33,8 +36,8 @@ echo -e "\n\033[1;32mAdding TUR repository...\033[0m"
 pkg install tur-repo -y
 pkg update -y
 
-echo -e "\n\033[1;32mInstalling core components...\033[0m"
-pkg install -y coreutils xwayland xfce4 xfce4-terminal xfce4-taskmanager \
+echo -e "\n\033[1;32mInstalling XFCE components...\033[0m"
+pkg install -y xwayland xfce4 xfce4-terminal xfce4-taskmanager \
     xfce4-whiskermenu-plugin xfce4-clipman-plugin xfce4-appmenu-plugin \
     git wget unzip firefox code-oss chromium
 
