@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Auto-Installer Creator Script
+# Auto-Installer Creator Script (FIXED VERSION)
 set -e
 
 # Define script content
@@ -46,34 +46,22 @@ echo -e "\n\033[1;32mAll tasks completed!\033[0m"
 
 # Create the setup script
 echo -e "\033[1;36mCreating installation script...\033[0m"
-if [ -f ~/setup.sh ]; then
-    echo -e "\033[1;33mExisting setup.sh found! Creating backup...\033[0m"
-    mv ~/setup.sh ~/setup.sh.bak
-fi
+[ -f ~/setup.sh ] && mv ~/setup.sh ~/setup.sh.bak
 
-# Write script content using cat
 cat <<EOF > ~/setup.sh
 $SCRIPT_CONTENT
 EOF
 
-# Make executable
 chmod +x ~/setup.sh
 
-# Create bin directory if not exists
+# Create shortcut
 echo -e "\033[1;36mCreating shortcut...\033[0m"
 mkdir -p ~/bin
-
-# Create symbolic link
 ln -sf ~/setup.sh ~/bin/setup
 
 echo -e "\n\033[1;32mAutomation setup complete!\033[0m"
-echo -e "You can now run the setup using either:"
-echo -e "1. Direct execution: \033[1m./setup.sh\033[0m"
-echo -e "2. Shortcut command: \033[1msetup\033[0m\n"
+echo -e "You can now run:\n\n\033[1m./setup.sh\033[0m \nor \033[1msetup\033[0m\n"
 
-# Optional: Offer to run immediately
-read -p "Do you want to start the installation now? (y/N) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    exec ~/setup.sh
-fi
+# Start confirmation
+read -p "Start installation now? (y/N) " -n 1 -r
+[[ $REPLY =~ ^[Yy]$ ]] && exec ~/setup.sh
