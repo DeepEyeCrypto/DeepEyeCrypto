@@ -33,8 +33,8 @@ echo -e "\n\033[1;32mAdding TUR repository...\033[0m"
 pkg install tur-repo -y
 pkg update -y
 
-echo -e "\n\033[1;32mInstalling XFCE components...\033[0m"
-pkg install -y xwayland xfce4 xfce4-terminal xfce4-taskmanager \
+echo -e "\n\033[1;32mInstalling core components...\033[0m"
+pkg install -y coreutils xwayland xfce4 xfce4-terminal xfce4-taskmanager \
     xfce4-whiskermenu-plugin xfce4-clipman-plugin xfce4-appmenu-plugin \
     git wget unzip firefox code-oss chromium
 
@@ -91,7 +91,7 @@ pkg autoremove -y
 rm -rf *.zip *.tar.gz
 
 echo -e "\n\033[1;32mCreating startup script...\033[0m"
-cat > ~/.xfce4-session << EOF
+cat > ~/.xfce4-session << "EOF"
 #!/data/data/com.termux/files/usr/bin/bash
 export DISPLAY=:0
 xfce4-session
@@ -107,7 +107,7 @@ bash DeepEyeCrypto.sh
 
 echo -e "\n\033[1;32mInstallation complete!\033[0m"
 
-cat << EOF
+cat << "EOF"
 
 To start XFCE Desktop:
 1. Install Termux:X11 from F-Droid
