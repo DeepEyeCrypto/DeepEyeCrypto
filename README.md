@@ -1,5 +1,3 @@
-# One-click-xfce-desktop-X11
-
 # 🖥️ One-Click XFCE Desktop X11 for Termux
 ![Mac OS theme](Screenshot_20250108-205306.png)
 ### 🚀 **Easily set up and launch an XFCE desktop environment with X11 on Termux in one command!**
