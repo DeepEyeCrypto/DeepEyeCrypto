@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Auto-Installer Creator Script (XFCE Desktop + WhiteSur Theme)
+# Auto-Installer for Termux XFCE Desktop with WhiteSur Theme
 set -e
 
-# Define script content
+# Define main installation script content
 SCRIPT_CONTENT='#!/bin/bash
 
 # Termux XFCE Desktop Setup Script
@@ -29,7 +29,7 @@ pkg install termux-x11-nightly -y
 echo -e "\n\033[1;32mSetting up PulseAudio...\033[0m"
 pkg install pulseaudio -y
 
-echo -e "\n\033[1;32mAdding TUR repository and updating packages...\033[0m"
+echo -e "\n\033[1;32mAdding TUR repository...\033[0m"
 pkg install tur-repo -y
 pkg update -y
 
@@ -38,7 +38,7 @@ pkg install -y xwayland xfce4 xfce4-terminal xfce4-taskmanager \
     xfce4-whiskermenu-plugin xfce4-clipman-plugin xfce4-appmenu-plugin \
     git wget unzip firefox code-oss chromium
 
-echo -e "\n\033[1;32mInstalling WhiteSur Theme Components...\033[0m"
+echo -e "\n\033[1;32mInstalling WhiteSur Theme...\033[0m"
 
 # GTK Theme
 git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git
@@ -56,7 +56,7 @@ mkdir -p $PREFIX/share/icons
 cp -r WhiteSur-cursors/dist/* $PREFIX/share/icons/
 rm -rf WhiteSur-cursors
 
-# Create theme symlinks
+# Create user theme directories
 mkdir -p ~/.themes ~/.icons
 ln -sf $PREFIX/share/themes/* ~/.themes/ 2>/dev/null
 ln -sf $PREFIX/share/icons/* ~/.icons/ 2>/dev/null
@@ -64,22 +64,15 @@ ln -sf $PREFIX/share/icons/* ~/.icons/ 2>/dev/null
 echo -e "\n\033[1;32mSetting up wallpapers...\033[0m"
 mkdir -p $WALLPAPER_DIR
 
-# Official Wallpapers
-git clone https://github.com/vinceliuice/WhiteSur-wallpapers.git
-cp WhiteSur-wallpapers/monterey/*.jpg $WALLPAPER_DIR/
-rm -rf WhiteSur-wallpapers
-
-# Additional Wallpapers
-declare -A EXTRA_WALLPAPERS=(
+# Wallpaper Setup
+declare -A WALLPAPERS=(
+    ["MacOS-Sonoma-1"]="https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg"
     ["MacOS-Big-Sur"]="https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg"
     ["MacOS-Fusion"]="https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg"
-    ["MacOS-Sonoma-1"]="https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg"
-    ["MacOS-Sonoma-2"]="https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg"
-    ["MacOS-Sierra"]="https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg"
 )
 
-for name in "${!EXTRA_WALLPAPERS[@]}"; do
-    wget -q -O $WALLPAPER_DIR/"${name}.jpg" "${EXTRA_WALLPAPERS[$name]}"
+for name in "${!WALLPAPERS[@]}"; do
+    wget -q -O $WALLPAPER_DIR/"${name}.jpg" "${WALLPAPERS[$name]}"
 done
 
 echo -e "\n\033[1;32mConfiguring XFCE desktop...\033[0m"
@@ -87,7 +80,7 @@ xfconf-query -c xsettings -p /Net/ThemeName -s "$THEME_NAME"
 xfconf-query -c xsettings -p /Net/IconThemeName -s "$ICON_NAME"
 xfconf-query -c xfwm4 -p /general/theme -s "$THEME_NAME"
 
-DEFAULT_WALLPAPER="$WALLPAPER_DIR/monterey-night.jpg"
+DEFAULT_WALLPAPER="$WALLPAPER_DIR/MacOS-Sonoma-1.jpg"
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-path -s "$DEFAULT_WALLPAPER"
 
 xfconf-query -c xfce4-panel -p /panels/panel-0/size -s 36
@@ -124,16 +117,17 @@ To start XFCE Desktop:
    ./.xfce4-session
 
 Recommended tools:
-• Firefox: pkg install firefox
+• Firefox: Already installed
 • LibreOffice: pkg install libreoffice
 
 Customization:
+• Right-click desktop > Desktop Settings to change wallpaper
 • Use xfce4-appearance-settings to modify themes
-• Wallpapers location: $WALLPAPER_DIR
+• Wallpaper directory: $WALLPAPER_DIR
 EOF
 '
 
-# Create setup script
+# Create installer script
 echo -e "\033[1;36mCreating installer...\033[0m"
 [ -f ~/setup.sh ] && mv ~/setup.sh ~/setup.sh.bak
 cat <<EOF > ~/setup.sh
@@ -145,7 +139,7 @@ chmod +x ~/setup.sh
 mkdir -p ~/bin
 ln -sf ~/setup.sh ~/bin/setup
 
-echo -e "\n\033[1;32mSetup created! Run with:\033[0m"
+echo -e "\n\033[1;32mSetup complete! Run with:\033[0m"
 echo -e "  ./setup.sh  or  setup\n"
 
 # Start confirmation
