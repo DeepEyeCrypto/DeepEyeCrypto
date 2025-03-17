@@ -64,4 +64,4 @@ echo -e "You can now run:\n\n\033[1m./setup.sh\033[0m \nor \033[1msetup\033[0m\n
 
 # Start confirmation
 read -p "Start installation now? (y/N) " -n 1 -r
-[[ $REPLY =~ ^[Yy]$ ]] && exec ~/setup.sh
+[[ $REPLY =~ ^[Yy]$ ]] && exec ./setup.sh
