@@ -1,7 +1,15 @@
 #!/bin/bash
 
-# Auto-Installer Creator Script (FIXED VERSION)
+# Auto-Installer Creator Script (Improved Version)
 set -e
+
+# Check if required commands are available
+for cmd in pkg termux-setup-storage wget; do
+    if ! command -v $cmd &> /dev/null; then
+        echo -e "\033[1;31mError: $cmd is not installed. Please install it and try again.\033[0m"
+        exit 1
+    fi
+done
 
 # Define script content
 SCRIPT_CONTENT='#!/bin/bash
@@ -64,4 +72,7 @@ echo -e "You can now run:\n\n\033[1m./setup.sh\033[0m \nor \033[1msetup\033[0m\n
 
 # Start confirmation
 read -p "Start installation now? (y/N) " -n 1 -r
-[[ $REPLY =~ ^[Yy]$ ]] && exec ~/setup.sh
+case "$REPLY" in
+    [Yy]* ) exec ~/setup.sh;;
+    * ) echo -e "\n\033[1;31mInstallation aborted.\033[0m";;
+esac
