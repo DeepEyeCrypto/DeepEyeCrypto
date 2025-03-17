@@ -11,7 +11,7 @@ W="\033[0m"
 # Configuration
 STYLE=${1:-3}  # Default to macOS theme
 BASE_URL="https://github.com/sabamdarif/termux-desktop/raw/setup-files/setup-files/xfce/look_"
-WALLPAPER_DIR="$PREFIX/share/backgrounds"
+WALLPAPER_DIR="$PREFIX/share/backgrounds/xfce"
 ICON_DIR="$HOME/.icons"
 THEME_DIR="$HOME/.themes"
 
