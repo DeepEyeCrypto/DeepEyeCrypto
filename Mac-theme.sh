@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Auto-Installer Creator Script
+set -e
+
+# Define script content
+SCRIPT_CONTENT='#!/bin/bash
+
 # Termux XFCE Desktop Setup Script
 set -e
 
@@ -29,10 +35,45 @@ pkg install firefox code-oss chromium git wget -y
 
 echo -e "\n\033[1;32mDownloading DeepEyeCrypto setup...\033[0m"
 cd ~
-wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/DeepEyeCrypto.sh
+wget -q https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/DeepEyeCrypto.sh
 chmod +x DeepEyeCrypto.sh
 
 echo -e "\n\033[1;32mInstallation complete! Starting final setup...\033[0m"
 bash ~/DeepEyeCrypto.sh
 
 echo -e "\n\033[1;32mAll tasks completed!\033[0m"
+'
+
+# Create the setup script
+echo -e "\033[1;36mCreating installation script...\033[0m"
+if [ -f ~/setup.sh ]; then
+    echo -e "\033[1;33mExisting setup.sh found! Creating backup...\033[0m"
+    mv ~/setup.sh ~/setup.sh.bak
+fi
+
+# Write script content using cat
+cat <<EOF > ~/setup.sh
+$SCRIPT_CONTENT
+EOF
+
+# Make executable
+chmod +x ~/setup.sh
+
+# Create bin directory if not exists
+echo -e "\033[1;36mCreating shortcut...\033[0m"
+mkdir -p ~/bin
+
+# Create symbolic link
+ln -sf ~/setup.sh ~/bin/setup
+
+echo -e "\n\033[1;32mAutomation setup complete!\033[0m"
+echo -e "You can now run the setup using either:"
+echo -e "1. Direct execution: \033[1m./setup.sh\033[0m"
+echo -e "2. Shortcut command: \033[1msetup\033[0m\n"
+
+# Optional: Offer to run immediately
+read -p "Do you want to start the installation now? (y/N) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    exec ~/setup.sh
+fi
