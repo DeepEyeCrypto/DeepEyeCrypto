@@ -1,137 +1,208 @@
-#########################################################################
-#
-# Theming Section
-#
-#########################################################################
+#!/bin/bash
 
-function install_font_for_style() {
-    local style_number="$1"
-    echo "${R}[${C}-${R}]${G} Installing Fonts...${W}"
-    check_and_create_directory "$HOME/.fonts"
-    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/$de_name/look_${style_number}/font.tar.gz" "$HOME/.fonts"
-    fc-cache -f
-    cd "$HOME" || return
+# ┌───────────────────────────────────┐
+# │        Auto Theme Installer       │
+# │  macOS-like Themes for Linux DEs  │
+# │      With Symbolic Link Setup     │
+# └───────────────────────────────────┘
+
+# Configuration
+BASE_URL="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/setup-files"
+CUSTOM_CONFIG_DIR="$HOME/dotfiles"  # Your custom configs location
+TEMP_DIR="/tmp/auto-theme-installer"
+LOG_FILE="$HOME/theme_install.log"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Dependencies
+REQUIRED_PKGS=("wget" "tar" "git" "fc-cache" "gtk-update-icon-cache")
+
+# ┌───────────────────────────────────┐
+# │          Core Functions           │
+# └───────────────────────────────────┘
+
+init_environment() {
+    mkdir -p "$TEMP_DIR"
+    echo -e "${BLUE}[INFO]${NC} Initializing installation..." | tee -a "$LOG_FILE"
+    
+    # Clean previous installations
+    find "$TEMP_DIR" -mindepth 1 -delete 2>/dev/null
 }
 
-function theme_installer() {
-    log_info "Starting theme installation" "Theme: $style_name"
-    banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_name}${W}"
-    echo
-
-    if [[ "$de_name" == "xfce" ]] || [[ "$de_name" == "openbox" ]]; then
-        package_install_and_check "gnome-themes-extra gtk2-engines-murrine"
-    fi
-
-    # Install wallpapers
-    banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Wallpapers...${W}"
-    check_and_create_directory "$PREFIX/share/backgrounds"
-    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
-
-    # Install icons
-    banner
-    check_and_create_directory "$icons_folder"
-    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/icon.tar.gz" "$icons_folder"
-
-    # Create icon caches
-    if [[ "$de_name" == "xfce" ]]; then
-        local icons_themes_names
-        icons_themes_names=$(ls "$icons_folder")
-        local icons_theme
-        for icons_theme in $icons_themes_names; do
-            if [[ -d "$icons_folder/$icons_theme" ]]; then
-                echo "${R}[${C}-${R}]${G} Creating icon cache...${W}"
-                gtk-update-icon-cache -f -t "$icons_folder/$icons_theme"
-            fi
-        done
-    fi
-
-    # Install themes
-    echo "${R}[${C}-${R}]${G}${BOLD} Installing Theme...${W}"
-    check_and_create_directory "$themes_folder"
-    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/theme.tar.gz" "$themes_folder"
-
-    # Install config files
-    echo "${R}[${C}-${R}]${G} Making Additional Configuration...${W}"
-    check_and_create_directory "$HOME/.config"
-    set_config_dir
-
-    for the_config_dir in "${config_dirs[@]}"; do
-        check_and_delete "$HOME/.config/$the_config_dir"
-    done
-
-    if [[ "$de_name" == "openbox" ]]; then
-        download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/config.tar.gz" "$HOME"
+detect_de() {
+    local de=""
+    if [ -n "$XDG_CURRENT_DESKTOP" ]; then
+        de=$(echo "$XDG_CURRENT_DESKTOP" | tr '[:upper:]' '[:lower:]')
     else
-        download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
+        de=$(ps -e | grep -E -i "xfce|kde|gnome|mate|lxqt|openbox" | awk '{print $4}' | tr '[:upper:]' '[:lower:]' | uniq)
     fi
 
-    if [ $? -ne 0 ]; then
-        log_error "Theme installation failed" "Theme: $style_name"
-    else
-        log_info "Theme installation completed successfully"
-    fi
-}
-
-function questions_theme_select() {
-    local owner="sabamdarif"
-    local repo="termux-desktop"
-    local main_folder="setup-files/$de_name"
-    local branch="setup-files"
-
-    # Style selection logic
-    cd "$HOME" || return
-    echo "${R}[${C}-${R}]${G} Downloading list of available styles...${W}"
-    check_and_delete "${current_path}/styles.md"
-    download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/${de_name}_styles.md"
-
-    banner
-
-    subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" "$branch" 2>/dev/null)
-
-    if [[ -n "$subfolder_count_value" ]]; then
-        echo "${R}[${C}-${R}]${G} Number of available custom styles for $de_name is: ${C}${subfolder_count_value}${W}"
-        echo
-        grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' styles.md | while read -r style; do
-            echo "${Y}${style#### }${W}"
-        done
-
-        while true; do
-            echo
-            read -r -p "${R}[${C}-${R}]${Y} Type number of the style: ${W}" style_answer
-            if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
-                style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //")
-                break
-            else
-                print_failed "Invalid style number"
-            fi
-        done
-
-        check_and_delete "${current_path}/styles.md"
-    else
-        print_failed "Failed to get style information"
-        exit 1
-    fi
-}
-
-function setup_theme() {
-    if [[ ${style_answer} =~ ^[1-9][0-9]*$ ]]; then
-        banner
-        echo "${R}[${C}-${R}]${G}${BOLD} Installing $de_name Style: ${C}${style_answer}${W}"
-        theme_installer
-        additional_required_steps
-    else
-        print_failed "Invalid style selection"
-        exit 1
-    fi
-}
-
-function set_config_dir() {
-    case "$de_name" in
-        "xfce") config_dirs=(autostart cairo-dock eww picom dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4) ;;
-        "lxqt") config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org) ;;
-        "openbox") config_dirs=(dconf gedit Kvantum openbox pulse rofi xfce4 enchant gtk-3.0 mimeapps.list polybar QtProject.conf Thunar) ;;
-        "mate") config_dirs=(caja dconf galculator gtk-3.0 Kvantum lximage-qt menus Mousepad pavucontrol.ini xfce4) ;;
+    case "$de" in
+        *xfce*) echo "xfce" ;;
+        *openbox*) echo "openbox" ;;
+        *lxqt*) echo "lxqt" ;;
+        *mate*) echo "mate" ;;
+        *) echo "unknown" ;;
     esac
 }
+
+install_dependencies() {
+    echo -e "${BLUE}[INFO]${NC} Checking dependencies..." | tee -a "$LOG_FILE"
+    
+    for pkg in "${REQUIRED_PKGS[@]}"; do
+        if ! command -v "$pkg" &>/dev/null; then
+            echo -e "${YELLOW}[WARN]${NC} Installing missing dependency: $pkg" | tee -a "$LOG_FILE"
+            pkg install -y "$pkg" || {
+                echo -e "${RED}[ERROR]${NC} Failed to install $pkg" | tee -a "$LOG_FILE"
+                exit 1
+            }
+        fi
+    done
+}
+
+fetch_styles() {
+    local de="$1"
+    echo -e "${BLUE}[INFO]${NC} Fetching available styles for $de..." | tee -a "$LOG_FILE"
+    
+    wget -q "$BASE_URL/${de}_styles.md" -O "$TEMP_DIR/styles.md" || {
+        echo -e "${RED}[ERROR]${NC} Failed to fetch styles list" | tee -a "$LOG_FILE"
+        exit 1
+    }
+
+    mapfile -t STYLES < <(grep -oP '## \K\d+\..+' "$TEMP_DIR/styles.md")
+    STYLE_COUNT=${#STYLES[@]}
+}
+
+select_style() {
+    echo -e "\n${GREEN}Available styles:${NC}"
+    for ((i=0; i<${#STYLES[@]}; i++)); do
+        echo -e "${BLUE}$((i+1)).${NC} ${STYLES[$i]}"
+    done
+
+    while true; do
+        echo -ne "\n${YELLOW}Select style (1-$STYLE_COUNT): ${NC}"
+        read -r choice
+        if [[ "$choice" =~ ^[0-9]+$ ]] && ((choice >= 1 && choice <= STYLE_COUNT)); then
+            SELECTED_STYLE="$choice"
+            STYLE_NAME="${STYLES[$((choice-1))]#*. }"
+            break
+        else
+            echo -e "${RED}Invalid selection! Try again.${NC}"
+        fi
+    done
+}
+
+download_assets() {
+    local de="$1"
+    local style="$2"
+    local asset_type="$3"
+    local target_dir="$4"
+
+    echo -e "${BLUE}[INFO]${NC} Downloading $asset_type..." | tee -a "$LOG_FILE"
+    wget -q "$BASE_URL/$de/look_$style/${asset_type}.tar.gz" -O "$TEMP_DIR/${asset_type}.tar.gz" || {
+        echo -e "${RED}[ERROR]${NC} Failed to download $asset_type" | tee -a "$LOG_FILE"
+        return 1
+    }
+
+    mkdir -p "$target_dir"
+    tar -xzf "$TEMP_DIR/${asset_type}.tar.gz" -C "$target_dir" 2>/dev/null || {
+        echo -e "${RED}[ERROR]${NC} Failed to extract $asset_type" | tee -a "$LOG_FILE"
+        return 1
+    }
+}
+
+link_configs() {
+    local de="$1"
+    local style="$2"
+    local source_dir="$CUSTOM_CONFIG_DIR/${de}_look_${style}"
+    
+    echo -e "${BLUE}[INFO]${NC} Creating symbolic links..." | tee -a "$LOG_FILE"
+    
+    # Define config directories based on DE
+    case "$de" in
+        "xfce") config_dirs=(autostart xfce4 rofi) ;;
+        "openbox") config_dirs=(openbox rofi) ;;
+        "lxqt") config_dirs=(lxqt pcmanfm-qt) ;;
+        "mate") config_dirs=(caja mate) ;;
+        *) echo -e "${RED}[ERROR]${NC} Unsupported DE!" | tee -a "$LOG_FILE"; exit 1 ;;
+    esac
+
+    for dir in "${config_dirs[@]}"; do
+        local target_path
+        [ "$de" = "openbox" ] && target_path="$HOME/$dir" || target_path="$HOME/.config/$dir"
+        
+        # Backup existing config
+        if [ -e "$target_path" ]; then
+            mv "$target_path" "${target_path}.bak" 2>/dev/null
+            echo -e "${YELLOW}[BACKUP]${NC} Created backup: ${target_path}.bak" | tee -a "$LOG_FILE"
+        fi
+
+        # Create symlink
+        if [ -d "$source_dir/$dir" ]; then
+            ln -sf "$source_dir/$dir" "$target_path"
+            echo -e "${GREEN}[LINK]${NC} Created: $source_dir/$dir → $target_path" | tee -a "$LOG_FILE"
+        else
+            echo -e "${RED}[ERROR]${NC} Missing config: $source_dir/$dir" | tee -a "$LOG_FILE"
+        fi
+    done
+}
+
+# ┌───────────────────────────────────┐
+# │         Main Execution           │
+# └───────────────────────────────────┘
+
+main() {
+    init_environment
+    
+    # Detect Desktop Environment
+    DE_NAME=$(detect_de)
+    [ "$DE_NAME" = "unknown" ] && {
+        echo -e "${RED}[ERROR]${NC} Could not detect desktop environment!" | tee -a "$LOG_FILE"
+        exit 1
+    }
+    echo -e "${GREEN}[STATUS]${NC} Detected DE: $DE_NAME" | tee -a "$LOG_FILE"
+
+    install_dependencies
+    fetch_styles "$DE_NAME"
+    select_style
+
+    echo -e "\n${BLUE}───────────────────────────────${NC}"
+    echo -e "${GREEN}Starting installation for:${NC}"
+    echo -e " • Desktop: ${BLUE}$DE_NAME${NC}"
+    echo -e " • Style: ${BLUE}$SELECTED_STYLE. $STYLE_NAME${NC}"
+    echo -e "${BLUE}───────────────────────────────${NC}\n"
+
+    # Download core assets
+    declare -A ASSETS=(
+        ["font"]="$HOME/.fonts"
+        ["icon"]="$HOME/.icons"
+        ["theme"]="$HOME/.themes"
+        ["wallpaper"]="/usr/share/backgrounds"
+    )
+
+    for asset in "${!ASSETS[@]}"; do
+        download_assets "$DE_NAME" "$SELECTED_STYLE" "$asset" "${ASSETS[$asset]}" || {
+            echo -e "${RED}[ERROR]${NC} Aborting installation!" | tee -a "$LOG_FILE"
+            exit 1
+        }
+    done
+
+    # Symbolic link configuration
+    link_configs "$DE_NAME" "$SELECTED_STYLE"
+
+    # Post-installation
+    echo -e "\n${GREEN}[SUCCESS]${NC} Installation completed!" | tee -a "$LOG_FILE"
+    echo -e " • View full log: ${BLUE}$LOG_FILE${NC}"
+    echo -e " • Restart your desktop environment to apply changes\n"
+
+    # Cleanup
+    rm -rf "$TEMP_DIR"
+}
+
+# Start main process
+main
