@@ -18,50 +18,33 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 - Install [Termux-X11](https://github.com/termux/termux-x11) for graphical support.
 ---
 
-# **1. Clone the Repository**
+# **1. basic xfce desktop**
 ```bash
-pkg update -y && pkg upgrade -y
-termux-setup-storage
-pkg install x11-repo
-pkg install termux-x11-nightly
-pkg install pulseaudio
-pkg install xfce4
-pkg install tur-repo
-pkg install firefox -y
-pkg install tur-repo
-pkg install code-oss -y
-pkg install chromium -y
-pkg install git -y
-pkg install wget -y
-cd ~
-wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/DeepEyeCrypto.sh
-chmod +x DeepEyeCrypto.sh
-bash ~/DeepEyeCrypto.sh
+curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/setup.sh | bash
+./setup.sh
 
 ```
-# **1. install powerful OS**
+# ** START**
+
+```bash
+bash ~/DeepEyeCrypto.sh
+```
+# **2. powerful desktop**
 ```bash
 pkg install wget
 wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/termux-ultimate-setup.sh
 chmod +x termux-ultimate-setup.sh
 ./termux-ultimate-setup.sh
 ```
-# **2. Launch X11
 # ** START**
 
 ```bash
 tx11start --legacy
 ```
-# **1. install Theme**
+# **1. advance desktop**
 ```bash
-pkg update -y && pkg upgrade -y
-pkg install git -y
-pkg install wget -y
-cd ~
-wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/themes.sh
-chmod +x themes.sh
-./themes.sh
-
+curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/setup.sh | bash
+./setup.sh
 ```
 # **2. install Theme**
 ```bash
@@ -71,50 +54,19 @@ chmod +x Mac-theme.sh
 ./Mac-theme.sh
 
 ```
-# **Launch XFCE Desktop
-# ** START**
+## Troubleshooting
+
+### Process Completed (Signal 9) - Press Enter
+
+1. Install LADB from the Play Store or download it from [here](https://github.com/hyperio546/ladb-builds/releases).
+2. Connect to Wi-Fi.
+3. Enable wireless debugging in Developer Settings and note the port number and pairing code.
+4. Enter these values in LADB.
+5. Once connected, run the following command:
 
 ```bash
-bash ~/DeepEyeCrypto.sh
+adb shell "/system/bin/device_config put activity_manager max_phantom_processes 2147483647"
 ```
----
-# ** STOP **
-```bash
-~/DeepEyeCrypto.sh stop
-```
-# **2. Now install chromium **
-```bash
-apt update && apt upgrade -y
-apt install chromium -y
-```
-# ** Now You Are Ready To Airdrop Hunting **
 
-# Ubuntu Proot on Termux with X11 Support
-
-This project provides a script to automate the installation of Ubuntu with a graphical desktop environment (XFCE4) in Termux, supporting X11 or VNC for GUI applications.
-
-## Features
-- Fully automated installation of Ubuntu (default: 22.04).
-- Lightweight XFCE4 desktop environment pre-installed.
-- X11 support using Termux-X11 or VNC.
-- Supports arm64 architecture.
-
-# Prerequisites
-# **universal.apk**
-- Install [Termux](https://termux.dev/) on your Android device.
-- Install [Termux-X11](https://github.com/termux/termux-x11) for graphical support.
-
-## Installation
-1. Clone this repository or download the script directly:
-   ```bash
-   pkg update -y && pkg upgrade -y
-   pkg install git -y
-   git clone https://github.com/DeepEyeCrypto/DeepEyeCrypto.git
-   cd DeepEyeCrypto
-   chmod +x install-ubuntu.sh
-   ./install-ubuntu.sh
-   ```
-   # **START**
-   ```BASH
-   ./start-ubuntu.sh
-   
+You can also run `adb shell` directly from Termux by following the guide in this video:  
+[YouTube Guide](https://www.youtube.com/watch?v=BHc7uvX34bM)
