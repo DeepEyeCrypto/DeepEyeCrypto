@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/bin/bash
 
 # Colors
 R="\033[1;31m"
@@ -98,22 +98,158 @@ install_theme() {
     [ $STYLE -eq 5 ] && setup_cyberpunk
 }
 
+# Main installation function
 main() {
     clear
-    echo -e "${C}┌──────────────────────────┐"
-    echo -e "│ Termux XFCE Theme Manager │"
-    echo -e "└──────────────────────────┘${W}"
-    
-    check_deps
-    install_icons
-    setup_wallpapers
-    install_theme
-    
-    echo -e "\n${C}[√] Installation Complete!"
-    echo -e "${Y}Restart XFCE and:"
-    echo -e " - Select theme: ${THEME_DIR}/xfce-look-${STYLE}"
-    echo -e " - Choose icons from: ${ICON_DIR}"
-    echo -e " - Wallpapers available in: ${WALLPAPER_DIR}${W}"
+    echo -e "\n${BLUE}╔════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║    XFCE Desktop Installation       ║${NC}"
+    echo -e "${BLUE}╚════════════════════════════════════╝${NC}"
+
+    # System compatibility check
+    if ! detect_termux; then
+        echo -e "${YELLOW}Please ensure your system meets the requirements${NC}"
+        exit 1
+    fi
+
+    # User confirmation
+    echo -e "${GREEN}This will install XFCE native desktop in Termux${NC}"
+    read -r -p $'\n${YELLOW}Press Enter to continue or Ctrl+C to cancel${NC}'
+
+    # User input
+    echo -n "Please enter username for proot installation: " > /dev/tty
+    read username < /dev/tty
+
+    # Repository and storage setup
+    termux-change-repo || exit 1
+    [ -d ~/storage ] || termux-setup-storage || exit 1
+
+    # System upgrades
+    pkg upgrade -y -o Dpkg::Options::="--force-confold" || exit 1
+
+    # Core dependencies
+    dependencies=('wget' 'proot-distro' 'x11-repo' 'tur-repo' 'pulseaudio' 'git')
+    pkg install -y "${dependencies[@]}" -o Dpkg::Options::="--force-confold" || exit 1
+
+    # Create directory structure
+    mkdir -p "$HOME/Desktop" "$HOME/Downloads" "$HOME/.fonts" "$HOME/.config" \
+        "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/" "$HOME/.config/autostart/"
+
+    # Install XFCE packages
+    xfce_packages=('xfce4' 'xfce4-goodies' 'xfce4-pulseaudio-plugin' 'firefox' 'starship' 
+                   'termux-x11-nightly' 'virglrenderer-android' 'mesa-vulkan-icd-freedreno-dri3'
+                   'fastfetch' 'papirus-icon-theme' 'eza' 'bat')
+    pkg install -y "${xfce_packages[@]}" -o Dpkg::Options::="--force-confold" || exit 1
+
+    # Configure theming
+    configure_theming
+
+    # Set aliases and starship
+    echo -e "\nalias ls='eza -lF --icons'\nalias cat='bat'\neval \"\$(starship init bash)\"" \
+        >> $PREFIX/etc/bash.bashrc
+    curl -o $HOME/.config/starship.toml https://raw.githubusercontent.com/phoenixbyrd/Termux_XFCE/main/starship.toml
+    sed -i "s/phoenixbyrd/$username/" $HOME/.config/starship.toml
+
+    # Desktop utilities
+    create_desktop_utilities
+    setup_fonts
+    configure_proot_environment
+    setup_hardware_acceleration
+
+    # Finalization
+    termux-reload-settings
+    echo -e "${GREEN}Installation complete! Use 'start' to launch your desktop environment.${NC}"
 }
 
+# Theming configuration function
+configure_theming() {
+    echo -e "\n${BLUE}╔════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║        Configuring XFCE Themes      ║${NC}"
+    echo -e "${BLUE}╚════════════════════════════════════╝${NC}"
+
+    # Wallpaper setup
+    wget -q https://raw.githubusercontent.com/phoenixbyrd/Termux_XFCE/main/dark_waves.png
+    mv dark_waves.png $PREFIX/share/backgrounds/xfce/
+
+    # Theme installations
+    install_whitesur_theme
+    install_fluent_cursors
+
+    # XFCE config files
+    create_xsettings
+    create_xfwm4_settings
+    create_desktop_settings
+
+    # GTK configuration
+    mkdir -p $HOME/.config/gtk-3.0
+    echo -e ".xfce4-panel {\n  border-top-left-radius: 10px;\n  border-top-right-radius: 10px;\n}" \
+        > $HOME/.config/gtk-3.0/gtk.css
+
+    # Terminal theming
+    mkdir -p $HOME/.config/xfce4/terminal
+    curl -s https://raw.githubusercontent.com/phoenixbyrd/Termux_XFCE/main/terminalrc \
+        > $HOME/.config/xfce4/terminal/terminalrc
+}
+
+# Helper functions for theming
+install_whitesur_theme() {
+    wget -q https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/2023-04-26.zip
+    unzip -q 2023-04-26.zip
+    tar -xf WhiteSur-gtk-theme-2023-04-26/release/WhiteSur-Dark-44-0.tar.xz
+    mv WhiteSur-Dark/ $PREFIX/share/themes/
+    rm -rf WhiteSur* 2023-04-26.zip
+}
+
+install_fluent_cursors() {
+    wget -q https://github.com/vinceliuice/Fluent-icon-theme/archive/2023-02-01.zip
+    unzip -q 2023-02-01.zip
+    mv Fluent-icon-theme-2023-02-01/cursors/dist* $PREFIX/share/icons/
+    rm -rf Fluent-icon-theme-2023-02-01 2023-02-01.zip
+}
+
+create_xsettings() {
+    cat <<'EOF' > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
+<?xml version="1.1" encoding="UTF-8"?>
+<channel name="xsettings" version="1.0">
+  <property name="Net" type="empty">
+    <property name="ThemeName" type="string" value="WhiteSur-Dark"/>
+    <property name="IconThemeName" type="string" value="Papirus-Dark"/>
+  </property>
+  <property name="Gtk" type="empty">
+    <property name="CursorThemeName" type="string" value="dist-dark"/>
+    <property name="CursorThemeSize" type="int" value="28"/>
+  </property>
+</channel>
+EOF
+}
+
+create_xfwm4_settings() {
+    cat <<'EOF' > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
+<?xml version="1.1" encoding="UTF-8"?>
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="theme" type="string" value="WhiteSur-Dark"/>
+    <property name="title_alignment" type="string" value="center"/>
+  </property>
+</channel>
+EOF
+}
+
+create_desktop_settings() {
+    cat <<EOF > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+<?xml version="1.1" encoding="UTF-8"?>
+<channel name="xfce4-desktop" version="1.0">
+  <property name="backdrop" type="empty">
+    <property name="screen0" type="empty">
+      <property name="monitorDexDisplay" type="empty">
+        <property name="workspace0" type="empty">
+          <property name="last-image" type="string" value="$PREFIX/share/backgrounds/xfce/dark_waves.png"/>
+        </property>
+      </property>
+    </property>
+  </property>
+</channel>
+EOF
+}
+
+# Start installation
 main
