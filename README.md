@@ -12,10 +12,24 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 - 🎨 **macOS Theme:** Applies WhiteSur GTK and icon themes.
 - 🛠️ **Alias Support:** Quick launch with a single command.
 - 📊 **Lightweight:** Optimized for Android's limited resources.
-# Prerequisites
-# **universal.apk**
-- Install [Termux](https://termux.dev/) on your Android device.
-- Install [Termux-X11](https://github.com/termux/termux-x11) for graphical support.
+## Getting Started:
+
+##### 1. Ensure Requirements Are Met:
+   - Android 8+ device
+   - **[Termux](https://termux.dev/en/)** (download from [GitHub](https://github.com/termux/termux-app/releases) or [F-Droid](https://f-droid.org/en/packages/com.termux/))
+      >NOTE: This Only Works On Termux From Github Or Fdroid
+
+     > Avoid using Termux from Google Play due to API limitations.
+   - **[Termux:X11](https://github.com/termux/termux-x11/releases)**
+   - **[Termux-API](https://github.com/termux/termux-api/releases)**
+   - Minimum 2GB of RAM (3GB recommended)
+   - 1.5-2GB of Internet data
+   - 3-4GB of free storage
+##### 2. Explore Desktop Styles this for powerful desktop:
+   - **[XFCE](xfce_styles.md)**
+   - **[LXQt](lxqt_styles.md)**
+   - **[OPENBOX](openbox_styles.md)**
+   - **[MATE](mate_styles.md)**
 ---
 
 # **1. basic xfce desktop**
