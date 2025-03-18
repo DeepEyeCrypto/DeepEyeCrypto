@@ -55,7 +55,7 @@ chmod +x termux-ultimate-setup.sh
 ```bash
 tx11start --legacy
 ```
-# **1. advance desktop**
+# **3. advance desktop**
 ```bash
 curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/setup.sh | bash
 ./setup.sh
