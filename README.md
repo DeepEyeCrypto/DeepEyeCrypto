@@ -80,9 +80,9 @@ Note: The display is pre-configured in the Debian proot environment, allowing yo
 # **2. install Theme**
 ```bash
 cd ~
-wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Mac-theme.sh
-chmod +x Mac-theme.sh
-./Mac-theme.sh
+wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/themes.sh
+chmod +x themes.sh
+./themes.sh
 
 ```
 ## Troubleshooting
