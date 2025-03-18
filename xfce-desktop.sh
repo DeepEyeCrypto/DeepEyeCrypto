@@ -1,81 +1,104 @@
 #!/bin/bash
 
 # Termux XFCE Installation Script
-# Version: 1.0
-# Author: Your Name
-# Description: Automated installation of XFCE in Termux
+# Version: 1.1
+# Improved error handling and debugging
 
-# Set variables
+# Configuration
 INSTALL_URL="https://raw.githubusercontent.com/phoenixbyrd/Termux_XFCE/main/install_xfce_native.sh"
-SCRIPT_NAME="install.sh"
-TMP_DIR="$HOME/.tmp_install_xfce"
+SCRIPT_NAME="install_xfce_native.sh"
+TMP_DIR="${HOME}/termux_xfce_install"
+LOG_FILE="${TMP_DIR}/installation.log"
 
 # Text formatting
-RED='\033[1;31m'
-GREEN='\033[1;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[1;36m'
-NC='\033[0m' # No Color
+BOLD="\033[1m"
+RED="\033[1;31m"
+GREEN="\033[1;32m"
+YELLOW="\033[1;33m"
+CYAN="\033[1;36m"
+NC="\033[0m"
+
+# Initialize logging
+init_logging() {
+    mkdir -p "${TMP_DIR}"
+    exec > >(tee -a "${LOG_FILE}") 2>&1
+}
 
 # Error handling
-set -e
-trap 'catch_error $? $LINENO' ERR
-
-catch_error() {
-    echo -e "${RED}Error $1 occurred on line $2${NC}"
+handle_error() {
+    echo -e "${RED}${BOLD}Error detected:${NC}"
+    echo -e "• Line: ${BASH_LINENO[0]}"
+    echo -e "• Command: ${BASH_COMMAND}"
+    echo -e "${YELLOW}Check log file: ${LOG_FILE}${NC}"
     cleanup
     exit 1
 }
 
-# Cleanup function
+# Cleanup resources
 cleanup() {
-    echo -e "${YELLOW}Cleaning up...${NC}"
-    rm -rf "$TMP_DIR/$SCRIPT_NAME"
+    echo -e "${CYAN}Cleaning up...${NC}"
+    rm -rf "${TMP_DIR}/${SCRIPT_NAME}"
     echo -e "${GREEN}Cleanup completed!${NC}"
 }
 
-# Check dependencies
-check_dependencies() {
-    echo -e "${CYAN}Checking dependencies...${NC}"
+# Check requirements
+check_requirements() {
+    echo -e "${CYAN}Checking system requirements...${NC}"
+    
+    # Check for curl
     if ! command -v curl &> /dev/null; then
-        echo -e "${RED}curl is required but not installed!${NC}"
-        echo -e "${YELLOW}Install it with: pkg install curl${NC}"
+        echo -e "${RED}curl is required but not found!${NC}"
+        echo -e "Install with: ${BOLD}pkg install curl${NC}"
         exit 1
     fi
-    echo -e "${GREEN}All dependencies are satisfied!${NC}"
+
+    # Check storage permission
+    if [ ! -w "${PWD}" ]; then
+        echo -e "${RED}Storage permission denied!${NC}"
+        echo -e "Grant storage access with: ${BOLD}termux-setup-storage${NC}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}All requirements satisfied!${NC}"
 }
 
-# Main installation function
-install_xfce() {
-    echo -e "${CYAN}Starting XFCE installation...${NC}"
-    
-    # Create temporary directory
-    mkdir -p "$TMP_DIR"
-    cd "$TMP_DIR"
-    
-    # Download installation script
-    echo -e "${YELLOW}Downloading installation script...${NC}"
-    curl -sSLf "$INSTALL_URL" -o "$SCRIPT_NAME"
-    
-    # Make script executable
-    chmod +x "$SCRIPT_NAME"
-    
-    # Execute installation script
-    echo -e "${CYAN}Running installation script...${NC}"
-    bash "$SCRIPT_NAME"
-    
-    echo -e "${GREEN}Installation completed successfully!${NC}"
+# Download installer
+download_installer() {
+    echo -e "${CYAN}Downloading installation script...${NC}"
+    if ! curl -sSLf "${INSTALL_URL}" -o "${TMP_DIR}/${SCRIPT_NAME}"; then
+        echo -e "${RED}Failed to download installer!${NC}"
+        echo -e "Check:"
+        echo -e "1. Internet connection"
+        echo -e "2. URL availability: ${INSTALL_URL}"
+        exit 1
+    fi
+    chmod +x "${TMP_DIR}/${SCRIPT_NAME}"
 }
 
-# Main execution
+# Main installation
+run_installation() {
+    echo -e "${CYAN}Starting installation...${NC}"
+    cd "${TMP_DIR}" || exit 1
+    "./${SCRIPT_NAME}" || {
+        echo -e "${RED}Installation script failed!${NC}"
+        exit 1
+    }
+}
+
+# Main execution flow
 main() {
-    check_dependencies
-    install_xfce
-    cleanup
-}
+    init_logging
+    trap handle_error ERR
+    trap 'echo -e "\n${RED}Installation interrupted!${NC}"; cleanup; exit 1' SIGINT
 
-# Handle Ctrl+C
-trap 'echo -e "\n${RED}Installation interrupted!${NC}"; cleanup; exit 1' SIGINT
+    check_requirements
+    download_installer
+    run_installation
+    cleanup
+    
+    echo -e "\n${GREEN}${BOLD}Successfully completed installation!${NC}"
+    echo -e "Log file preserved at: ${LOG_FILE}"
+}
 
 # Start main process
 main
