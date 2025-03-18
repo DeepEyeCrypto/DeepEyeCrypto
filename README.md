@@ -59,6 +59,24 @@ tx11start --legacy
 ```bash
 curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/xfce-desktop.sh | bash
 ```
+## Starting the Desktop
+
+To start the desktop, use the following command:
+
+```bash
+start
+```
+
+This command initiates a Termux-X11 session, starts the XFCE4 desktop, and opens the Termux-X11 app directly into the desktop.
+
+To access the Debian proot environment from the terminal, use:
+
+```bash
+debian
+```
+
+Note: The display is pre-configured in the Debian proot environment, allowing you to launch GUI applications directly from the terminal.
+
 # **2. install Theme**
 ```bash
 cd ~
