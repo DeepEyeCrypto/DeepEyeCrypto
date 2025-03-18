@@ -60,6 +60,12 @@ configure_theming() {
     mv WhiteSur-Dark/ $PREFIX/share/themes/
     rm -rf WhiteSur* 2023-04-26.zip
 
+    # Install WhiteSur-Dark Icons
+    wget -q https://github.com/vinceliuice/WhiteSur-icon-theme/archive/refs/heads/master.zip
+    unzip -q master.zip
+    mv WhiteSur-icon-theme-master/WhiteSur-Dark $HOME/.icons/
+    rm -rf WhiteSur-icon-theme-master master.zip
+
     # Apply theme configurations
     mkdir -p $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/
     cat <<'EOF' > $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
@@ -67,6 +73,7 @@ configure_theming() {
 <channel name="xsettings" version="1.0">
   <property name="Net" type="empty">
     <property name="ThemeName" type="string" value="WhiteSur-Dark"/>
+    <property name="IconThemeName" type="string" value="WhiteSur-Dark"/>
   </property>
 </channel>
 EOF
