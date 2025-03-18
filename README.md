@@ -57,8 +57,7 @@ tx11start --legacy
 ```
 # **3. advance desktop**
 ```bash
-curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/setup.sh | bash
-./setup.sh
+curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/xfce-desktop.sh | bash
 ```
 # **2. install Theme**
 ```bash
