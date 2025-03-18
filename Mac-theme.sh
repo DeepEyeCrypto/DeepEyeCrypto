@@ -46,19 +46,21 @@ function safe_download() {
     local url="$1"
     local target="$2"
     local retries=3
-    local timeout=20
-    
+    local timeout=60 # Increased timeout from 20 to 60 seconds
+
     echo -e "${C}[+] Downloading ${url##*/}...${W}"
-    
+
     for ((i=1; i<=retries; i++)); do
         if curl -m $timeout -sL "$url" | tar xz -C "$target" 2>>"$log_file"; then
+            echo -e "${G}[✓] Downloaded ${url##*/} successfully${W}"
             return 0
         fi
         echo -e "${Y}[!] Download failed, retrying (attempt $i/$retries)...${W}"
         sleep 2
     done
-    
+
     echo -e "${R}[!] Failed to download ${url##*/}${W}"
+    echo -e "${R}[!] Check if the URL is correct and accessible: $url${W}" >> "$log_file"
     return 1
 }
 
