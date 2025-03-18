@@ -2,9 +2,8 @@
 
 #########################################################################
 #
-# Termux Theme Installer v2.1
+# Termux XFCE Theme Installer v1.0
 # Supports macOS and Standard Themes
-# All Links Verified Working (March 2025)
 #
 #########################################################################
 
@@ -20,7 +19,7 @@ NC='\033[0m'
 # Configuration
 temp_dir="$HOME/.temp_theme_files"
 log_file="$HOME/theme_install.log"
-de_name=""
+de_name="xfce"
 retries=3  # Default number of retries for downloads
 log_level="info"  # Default log level
 
@@ -71,19 +70,6 @@ function safe_download() {
     return 1
 }
 
-function detect_de() {
-    de_name=$(ps -e | grep -E -i "xfce|mate|openbox" | awk '{print $4}' | tr -d ' ' | head -n1 | tr '[:upper:]' '[:lower:]')
-
-    case "$de_name" in
-        *xfce*) de_name="xfce" ;;
-        *mate*) de_name="mate" ;;
-        *openbox*) de_name="openbox" ;;
-        *) log_error "No supported DE found!"; exit 1 ;;
-    esac
-
-    log_info "Detected DE: ${de_name^}"
-}
-
 function install_deps() {
     log_info "Installing dependencies..."
     pkg update -y && pkg install -y \
@@ -113,11 +99,9 @@ function setup_macos_theme() {
     safe_download "${resources[plank_conf]}" "$HOME/.config" || return 1
 
     # Apply theme settings
-    if [[ "$de_name" == "xfce" ]]; then
-        xfconf-query -c xsettings -p /Net/ThemeName -s "MacOS"
-        xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
-        xfconf-query -c xfwm4 -p /general/button_layout -s "CMH|"
-    fi
+    xfconf-query -c xsettings -p /Net/ThemeName -s "MacOS"
+    xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
+    xfconf-query -c xfwm4 -p /general/button_layout -s "CMH|"
 }
 
 function setup_standard_theme() {
@@ -127,17 +111,11 @@ function setup_standard_theme() {
     safe_download "${resources[gtk_themes]}" "$HOME/.themes" || return 1
 
     # Install wallpapers
-    case "$de_name" in
-        "xfce"|"mate")
-            safe_download "${resources[xfce_wall]}" "$PREFIX/share/backgrounds" || return 1
-        ;;
-    esac
+    safe_download "${resources[xfce_wall]}" "$PREFIX/share/backgrounds/xfce" || return 1
 
     # Apply theme
-    if [[ "$de_name" == "xfce" ]]; then
-        xfconf-query -c xsettings -p /Net/ThemeName -s "FlatColor"
-        xfconf-query -c xsettings -p /Net/IconThemeName -s "Flat-Remix"
-    fi
+    xfconf-query -c xsettings -p /Net/ThemeName -s "FlatColor"
+    xfconf-query -c xsettings -p /Net/IconThemeName -s "Flat-Remix"
 }
 
 #########################################################################
@@ -172,7 +150,6 @@ function main_menu() {
 {
     clean_install
     install_deps
-    detect_de
     main_menu
 
     log_info "Installation completed!"
