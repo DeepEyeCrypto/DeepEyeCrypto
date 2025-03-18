@@ -33,6 +33,14 @@ MACOS_WALLPAPERS=(
     "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg"
 )
 
+detect_termux() {
+    if [ -n "$PREFIX" ] && [ -x "$(command -v termux-info)" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 check_deps() {
     local deps=(wget tar)
     [ $STYLE -eq 5 ] && deps+=(eww xorg-xrdb git)
