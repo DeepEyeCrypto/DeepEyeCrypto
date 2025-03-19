@@ -18,6 +18,10 @@ exec 2>>"$LOG_FILE"
 # Temporary directory for setup
 TEMP_DIR=$(mktemp -d)
 
+# ========================
+# Core XFCE Installation
+# ========================
+
 print_status() {
     local status=$1
     local message=$2
@@ -44,32 +48,17 @@ detect_termux() {
     return $errors
 }
 
-download_file() {
-    local url=$1
-    local dest=$2
-    wget -q --show-progress "$url" -O "$dest" || {
-        print_status "error" "Failed to download $url"
-        return 1
-    }
-}
-
 configure_theming() {
     echo -e "\n${BLUE}╔════════════════════════════════════╗${NC}"
     echo -e "${BLUE}║     WhiteSur-Dark Theme Setup      ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════╝${NC}"
 
     # Install WhiteSur-Dark
-    download_file "https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/2023-04-26.zip" "2023-04-26.zip"
-    unzip -q 2023-04-26.zip || { print_status "error" "Failed to unzip theme file"; return 1; }
+    wget -q https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/2023-04-26.zip
+    unzip -q 2023-04-26.zip
     tar -xf WhiteSur-gtk-theme-2023-04-26/release/WhiteSur-Dark-44-0.tar.xz
-    mv WhiteSur-Dark/ $PREFIX/share/.themes/
+    mv WhiteSur-Dark/ $PREFIX/share/themes/
     rm -rf WhiteSur* 2023-04-26.zip
-
-    # Install WhiteSur-Dark Icons
-    download_file "https://github.com/vinceliuice/WhiteSur-icon-theme/archive/refs/heads/master.zip" "master.zip"
-    unzip -q master.zip || { print_status "error" "Failed to unzip icon theme file"; return 1; }
-    mv WhiteSur-icon-theme-master/WhiteSur-Dark $PREFIX/share/.themes/
-    rm -rf WhiteSur-icon-theme-master master.zip
 
     # Apply theme configurations
     mkdir -p $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/
@@ -78,20 +67,18 @@ configure_theming() {
 <channel name="xsettings" version="1.0">
   <property name="Net" type="empty">
     <property name="ThemeName" type="string" value="WhiteSur-Dark"/>
-    <property name="IconThemeName" type="string" value="WhiteSur-Dark"/>
   </property>
 </channel>
 EOF
 
-    # Set default wallpapers
-    WALLPAPER_DIR="$PREFIX/share/backgrounds/xfce"
-    mkdir -p "$WALLPAPER_DIR"
-    download_file "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg" "$WALLPAPER_DIR/macos-big-sur.jpg"
-    download_file "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg" "$WALLPAPER_DIR/macos-fusion.jpg"
-    download_file "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg" "$WALLPAPER_DIR/macos-sonoma-1.jpg"
-    download_file "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg" "$WALLPAPER_DIR/macos-sonoma-2.jpg"
-    download_file "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg" "$WALLPAPER_DIR/macos-high-sierra.jpg"
+    # Set default wallpaper
+    wget -q -O $PREFIX/share/backgrounds/xfce/WhiteSur-Dark.png \
+        https://raw.githubusercontent.com/vinceliuice/WhiteSur-wallpapers/main/backgrounds/monterey/WhiteSur_Dark.png
 }
+
+# ========================
+# Theme Manager Installation
+# ========================
 
 install_theme_manager() {
     echo -e "\n${BLUE}╔════════════════════════════════════╗${NC}"
@@ -188,6 +175,10 @@ Categories=Settings;
 EOF
     chmod +x $HOME/Desktop/Theme-Manager.desktop
 }
+
+# ========================
+# Main Installation Flow
+# ========================
 
 main() {
     clear
