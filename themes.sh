@@ -34,7 +34,7 @@ mkdir -p $ICON_DIR $THEME_DIR $CURSOR_DIR $WALLPAPER_DIR $GENMON_SCRIPT_DIR
 
 # Install cursor theme
 print_msg $YELLOW "Installing cursor theme..."
-wget -q --show-progress https://github.com/vinceliuice/WhiteSur-cursors/releases/download/v1.0/WhiteSur-cursors.tar.xz -O cursors.tar.xz
+wget -q --show-progress https://github.com/ful1e5/apple_cursor/releases/download/v2.0.1/macOS-White.tar.xz -O cursors.tar.xz
 
 if [ $? -eq 0 ]; then
     if file cursors.tar.xz | grep -q 'XZ compressed data'; then
