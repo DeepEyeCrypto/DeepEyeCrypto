@@ -27,7 +27,7 @@ mkdir -p $PREFIX/share/backgrounds/xfce
 
 # Download and install icons
 echo "Installing icons..."
-ICON_URL="https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/main/01-WhiteSur.tar.xz"
+ICON_URL="https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz"
 wget -q $ICON_URL -O $PREFIX/share/.icons/WhiteSur.tar.xz
 if [[ $? -ne 0 ]]; then
     echo "Error downloading icons." >&2
@@ -39,9 +39,9 @@ rm $PREFIX/share/.icons/WhiteSur.tar.xz
 # Download and install themes
 echo "Installing themes..."
 THEME_URLS=(
-    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/master/release/WhiteSur-Dark-solid-nord.tar.xz"
-    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/master/release/WhiteSur-Dark.tar.xz"
-    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/master/release/WhiteSur-Light.tar.xz"
+    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark-solid-nord.tar.xz"
+    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark.tar.xz"
+    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Light.tar.xz"
 )
 
 for url in "${THEME_URLS[@]}"; do
