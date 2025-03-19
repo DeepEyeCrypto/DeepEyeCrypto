@@ -84,10 +84,6 @@ for wp_url in "${WALLPAPER_URLS[@]}"; do
     fi
 done
 
-# Clean up
-echo -e "${YELLOW}Cleaning up...${NC}"
-apt autoremove -y
-
 echo -e "${BLUE}Installation complete!${NC}"
 echo -e "${GREEN}To apply changes:${NC}"
 echo -e "1. Open XFCE Settings Manager"
