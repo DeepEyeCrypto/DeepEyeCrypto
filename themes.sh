@@ -48,21 +48,30 @@ detect_termux() {
     return $errors
 }
 
+download_file() {
+    local url=$1
+    local dest=$2
+    wget -q --show-progress "$url" -O "$dest" || {
+        print_status "error" "Failed to download $url"
+        return 1
+    }
+}
+
 configure_theming() {
     echo -e "\n${BLUE}╔════════════════════════════════════╗${NC}"
     echo -e "${BLUE}║     WhiteSur-Dark Theme Setup      ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════╝${NC}"
 
     # Install WhiteSur-Dark
-    wget -q https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/2023-04-26.zip
-    unzip -q 2023-04-26.zip
+    download_file "https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/2023-04-26.zip" "2023-04-26.zip"
+    unzip -q 2023-04-26.zip || { print_status "error" "Failed to unzip theme file"; return 1; }
     tar -xf WhiteSur-gtk-theme-2023-04-26/release/WhiteSur-Dark-44-0.tar.xz
     mv WhiteSur-Dark/ $PREFIX/share/.themes/
     rm -rf WhiteSur* 2023-04-26.zip
 
     # Install WhiteSur-Dark Icons
-    wget -q https://github.com/vinceliuice/WhiteSur-icon-theme/archive/refs/heads/master.zip
-    unzip -q master.zip
+    download_file "https://github.com/vinceliuice/WhiteSur-icon-theme/archive/refs/heads/master.zip" "master.zip"
+    unzip -q master.zip || { print_status "error" "Failed to unzip icon theme file"; return 1; }
     mv WhiteSur-icon-theme-master/WhiteSur-Dark $PREFIX/share/.themes/
     rm -rf WhiteSur-icon-theme-master master.zip
 
@@ -81,11 +90,11 @@ EOF
     # Set default wallpapers
     WALLPAPER_DIR="$PREFIX/share/backgrounds/xfce"
     mkdir -p "$WALLPAPER_DIR"
-    wget -q -O "$WALLPAPER_DIR/macos-big-sur.jpg" "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg"
-    wget -q -O "$WALLPAPER_DIR/macos-fusion.jpg" "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg"
-    wget -q -O "$WALLPAPER_DIR/macos-sonoma-1.jpg" "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg"
-    wget -q -O "$WALLPAPER_DIR/macos-sonoma-2.jpg" "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg"
-    wget -q -O "$WALLPAPER_DIR/macos-high-sierra.jpg" "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg"
+    download_file "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg" "$WALLPAPER_DIR/macos-big-sur.jpg"
+    download_file "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg" "$WALLPAPER_DIR/macos-fusion.jpg"
+    download_file "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg" "$WALLPAPER_DIR/macos-sonoma-1.jpg"
+    download_file "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg" "$WALLPAPER_DIR/macos-sonoma-2.jpg"
+    download_file "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg" "$WALLPAPER_DIR/macos-high-sierra.jpg"
 }
 
 # ========================
