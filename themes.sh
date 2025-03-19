@@ -1,74 +1,51 @@
 #!/bin/bash
 
-# Define color codes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-set -e
-
-# Common directory for themes and icons
-COMMON_DIR="$PREFIX/share/themes_and_icons"
-
-# Function to check if a command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# Ensure required commands are available
-for cmd in wget tar xz; do
-    if ! command_exists "$cmd"; then
-        echo -e "${RED}Error: $cmd is not installed.${NC}" >&2
-        exit 1
-    fi
-done
-
 # Install required packages
-echo -e "${BLUE}Installing required packages...${NC}"
-pkg install -y wget tar xz-utils
+pkg update -y
+pkg install -y wget tar x11-repo
+pkg install -y xfce4 xfce4-terminal xfce4-genmon-plugin
 
-# Create common directory
-echo -e "${YELLOW}Creating common directory...${NC}"
-mkdir -p $COMMON_DIR
+# Define paths
+ICON_DIR="$HOME/.icons"
+THEME_DIR="$HOME/.themes"
+CURSOR_DIR="$HOME/.icons"
+WALLPAPER_DIR="$PREFIX/share/backgrounds/xfce"
+GENMON_SCRIPT_DIR="$HOME/.config/xfce4/genmon-scripts"
 
-# Download and install icons
-echo -e "${GREEN}Installing icons...${NC}"
-ICON_URL="https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz"
-wget -q $ICON_URL -O $COMMON_DIR/WhiteSur.tar.xz
-if [[ $? -ne 0 ]]; then
-    echo -e "${RED}Error downloading icons.${NC}" >&2
-    exit 1
-fi
-tar -xf $COMMON_DIR/WhiteSur.tar.xz -C $COMMON_DIR
-rm $COMMON_DIR/WhiteSur.tar.xz
+# Create directories
+mkdir -p $ICON_DIR $THEME_DIR $CURSOR_DIR $WALLPAPER_DIR $GENMON_SCRIPT_DIR
 
-# Download and install themes
-echo -e "${GREEN}Installing themes...${NC}"
-THEME_URLS=(
+# Install cursor theme
+echo "Installing cursor theme..."
+wget -q https://github.com/vinceliuice/WhiteSur-cursors/releases/download/v1.0/WhiteSur-cursors.tar.xz -O cursors.tar.xz
+tar -xf cursors.tar.xz -C $CURSOR_DIR
+rm -f cursors.tar.xz
+
+# Install icons
+echo "Installing icons..."
+wget -q https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz -O icons.tar.xz
+tar -xf icons.tar.xz -C $ICON_DIR
+rm -f icons.tar.xz
+
+# Install themes
+declare -a theme_urls=(
     "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark-solid-nord.tar.xz"
     "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark.tar.xz"
     "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Light.tar.xz"
 )
 
-for url in "${THEME_URLS[@]}"; do
-    filename=$(basename "$url")
-    wget -q "$url" -O $COMMON_DIR/"$filename"
-    if [[ $? -ne 0 ]]; then
-        echo -e "${RED}Error downloading theme $filename.${NC}" >&2
-        exit 1
-    fi
-    tar -xf $COMMON_DIR/"$filename" -C $COMMON_DIR
-    rm $COMMON_DIR/"$filename"
+for url in "${theme_urls[@]}"; do
+    echo "Installing theme: $(basename $url)"
+    wget -q $url -O theme.tar.xz
+    tar -xf theme.tar.xz -C $THEME_DIR
+    rm -f theme.tar.xz
 done
 
-# Download wallpapers
-echo -e "${GREEN}Downloading wallpapers...${NC}"
-WALLPAPER_URLS=(
-    "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/main/4k/Monterey-dark.jpg"
-    "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/main/4k/WhiteSur-dark.jpg"
-    "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/main/4k/Ventura-dark.jpg"
+# Install wallpapers
+declare -a wallpaper_urls=(
+    "https://github.com/vinceliuice/WhiteSur-wallpapers/blob/main/4k/Monterey-dark.jpg"
+    "https://github.com/vinceliuice/WhiteSur-wallpapers/blob/main/4k/WhiteSur-dark.jpg"
+    "https://github.com/vinceliuice/WhiteSur-wallpapers/blob/main/4k/Ventura-dark.jpg"
     "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg"
     "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg"
     "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg"
@@ -76,17 +53,49 @@ WALLPAPER_URLS=(
     "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg"
 )
 
-for wp_url in "${WALLPAPER_URLS[@]}"; do
-    wget -q --show-progress "$wp_url" -P $PREFIX/share/backgrounds/xfce/
-    if [[ $? -ne 0 ]]; then
-        echo -e "${RED}Error downloading wallpaper $wp_url.${NC}" >&2
-        exit 1
+for url in "${wallpaper_urls[@]}"; do
+    if [[ $url == *"github.com"* ]]; then
+        url="${url/github.com\/vinceliuice\/WhiteSur-wallpapers\/blob/raw.githubusercontent.com\/vinceliuice\/WhiteSur-wallpapers}"
     fi
+    
+    filename=$(basename $url)
+    echo "Downloading wallpaper: $filename"
+    wget -q --show-progress $url -O "$WALLPAPER_DIR/$filename"
 done
 
-echo -e "${BLUE}Installation complete!${NC}"
-echo -e "${GREEN}To apply changes:${NC}"
-echo -e "1. Open XFCE Settings Manager"
-echo -e "2. Choose 'Appearance' to select themes"
-echo -e "3. Use 'Window Manager' to select window theme"
-echo -e "4. Set wallpaper from $PREFIX/share/backgrounds/xfce/"
+# Configure clock widget
+echo "Creating clock widget..."
+cat > $GENMON_SCRIPT_DIR/clock.sh <<EOF
+#!/bin/bash
+echo "<txt> \$(date +'%a %d %b %H:%M') </txt>"
+echo "<tool>Calendar</tool>"
+EOF
+
+chmod +x $GENMON_SCRIPT_DIR/clock.sh
+
+# Apply theme settings
+xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark-solid-nord"
+xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark-solid-nord"
+xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
+xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "WhiteSur-cursors"
+
+# Set wallpaper
+first_wallpaper=$(ls $WALLPAPER_DIR | head -n 1)
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$WALLPAPER_DIR/$first_wallpaper"
+
+# Add clock widget to panel
+echo "Configuring clock widget..."
+plugin_ids=$(xfconf-query -c xfce4-panel -p /plugins/plugin-ids | sed 's/[^0-9]/ /g')
+last_id=$(echo $plugin_ids | awk '{print $NF}')
+new_id=$((last_id + 1))
+
+xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $new_id
+xfconf-query -c xfce4-panel -p /plugins/plugin-$new_id -n -t string -s "genmon"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$new_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/clock.sh"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$new_id/padding -n -t int -s 5
+xfconf-query -c xfce4-panel -p /plugins/plugin-$new_id/refresh-rate -n -t int -s 1
+
+# Restart panel to apply changes
+xfce4-panel --restart
+
+echo "Installation complete! Your macOS-style theme with clock widget is ready."
