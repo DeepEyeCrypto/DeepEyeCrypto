@@ -57,13 +57,13 @@ configure_theming() {
     wget -q https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/2023-04-26.zip
     unzip -q 2023-04-26.zip
     tar -xf WhiteSur-gtk-theme-2023-04-26/release/WhiteSur-Dark-44-0.tar.xz
-    mv WhiteSur-Dark/ $PREFIX/share/themes/
+    mv WhiteSur-Dark/ $PREFIX/share/.themes/
     rm -rf WhiteSur* 2023-04-26.zip
 
     # Install WhiteSur-Dark Icons
     wget -q https://github.com/vinceliuice/WhiteSur-icon-theme/archive/refs/heads/master.zip
     unzip -q master.zip
-    mv WhiteSur-icon-theme-master/WhiteSur-Dark $HOME/.icons/
+    mv WhiteSur-icon-theme-master/WhiteSur-Dark $PREFIX/share/.themes/
     rm -rf WhiteSur-icon-theme-master master.zip
 
     # Apply theme configurations
@@ -78,9 +78,14 @@ configure_theming() {
 </channel>
 EOF
 
-    # Set default wallpaper
-    wget -q -O $PREFIX/share/backgrounds/xfce/WhiteSur-Dark.png \
-        https://raw.githubusercontent.com/vinceliuice/WhiteSur-wallpapers/main/backgrounds/monterey/WhiteSur_Dark.png
+    # Set default wallpapers
+    WALLPAPER_DIR="$PREFIX/share/backgrounds/xfce"
+    mkdir -p "$WALLPAPER_DIR"
+    wget -q -O "$WALLPAPER_DIR/macos-big-sur.jpg" "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg"
+    wget -q -O "$WALLPAPER_DIR/macos-fusion.jpg" "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg"
+    wget -q -O "$WALLPAPER_DIR/macos-sonoma-1.jpg" "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg"
+    wget -q -O "$WALLPAPER_DIR/macos-sonoma-2.jpg" "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg"
+    wget -q -O "$WALLPAPER_DIR/macos-high-sierra.jpg" "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg"
 }
 
 # ========================
