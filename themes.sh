@@ -1,17 +1,38 @@
 #!/bin/bash
+
 set -e
 
+# Function to check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Ensure required commands are available
+for cmd in wget tar xz; do
+    if ! command_exists "$cmd"; then
+        echo "Error: $cmd is not installed." >&2
+        exit 1
+    fi
+done
+
 # Install required packages
+echo "Installing required packages..."
 pkg install -y wget tar xz-utils
 
 # Create directories
+echo "Creating directories..."
 mkdir -p $PREFIX/share/.icons
 mkdir -p $PREFIX/share/.themes
 mkdir -p $PREFIX/share/backgrounds/xfce
 
 # Download and install icons
 echo "Installing icons..."
-wget -q https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/main/01-WhiteSur.tar.xz -O $PREFIX/share/.icons/WhiteSur.tar.xz
+ICON_URL="https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/main/01-WhiteSur.tar.xz"
+wget -q $ICON_URL -O $PREFIX/share/.icons/WhiteSur.tar.xz
+if [[ $? -ne 0 ]]; then
+    echo "Error downloading icons." >&2
+    exit 1
+fi
 tar -xf $PREFIX/share/.icons/WhiteSur.tar.xz -C $PREFIX/share/.icons/
 rm $PREFIX/share/.icons/WhiteSur.tar.xz
 
@@ -26,6 +47,10 @@ THEME_URLS=(
 for url in "${THEME_URLS[@]}"; do
     filename=$(basename "$url")
     wget -q "$url" -O $PREFIX/share/.themes/"$filename"
+    if [[ $? -ne 0 ]]; then
+        echo "Error downloading theme $filename." >&2
+        exit 1
+    fi
     tar -xf $PREFIX/share/.themes/"$filename" -C $PREFIX/share/.themes/
     rm $PREFIX/share/.themes/"$filename"
 done
@@ -45,6 +70,10 @@ WALLPAPER_URLS=(
 
 for wp_url in "${WALLPAPER_URLS[@]}"; do
     wget -q --show-progress "$wp_url" -P $PREFIX/share/backgrounds/xfce/
+    if [[ $? -ne 0 ]]; then
+        echo "Error downloading wallpaper $wp_url." >&2
+        exit 1
+    fi
 done
 
 # Clean up
