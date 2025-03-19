@@ -34,9 +34,19 @@ mkdir -p $ICON_DIR $THEME_DIR $CURSOR_DIR $WALLPAPER_DIR $GENMON_SCRIPT_DIR
 
 # Install cursor theme
 print_msg $YELLOW "Installing cursor theme..."
-wget -q https://github.com/vinceliuice/WhiteSur-cursors/releases/download/v1.0/WhiteSur-cursors.tar.xz -O cursors.tar.xz
-tar -xf cursors.tar.xz -C $CURSOR_DIR
-rm -f cursors.tar.xz
+wget -q --show-progress https://github.com/vinceliuice/WhiteSur-cursors/releases/download/v1.0/WhiteSur-cursors.tar.xz -O cursors.tar.xz
+
+if [ $? -eq 0 ]; then
+    if file cursors.tar.xz | grep -q 'XZ compressed data'; then
+        tar -xf cursors.tar.xz -C $CURSOR_DIR
+        rm -f cursors.tar.xz
+        print_msg $GREEN "Cursor theme installed successfully."
+    else
+        print_msg $RED "Downloaded file is not a valid tar.xz archive."
+    fi
+else
+    print_msg $RED "Failed to download cursor theme."
+fi
 
 # Install icons
 print_msg $YELLOW "Installing icons..."
