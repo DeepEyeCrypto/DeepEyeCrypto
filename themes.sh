@@ -18,10 +18,6 @@ exec 2>>"$LOG_FILE"
 # Temporary directory for setup
 TEMP_DIR=$(mktemp -d)
 
-# ========================
-# Core XFCE Installation
-# ========================
-
 print_status() {
     local status=$1
     local message=$2
@@ -96,10 +92,6 @@ EOF
     download_file "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg" "$WALLPAPER_DIR/macos-sonoma-2.jpg"
     download_file "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg" "$WALLPAPER_DIR/macos-high-sierra.jpg"
 }
-
-# ========================
-# Theme Manager Installation
-# ========================
 
 install_theme_manager() {
     echo -e "\n${BLUE}╔════════════════════════════════════╗${NC}"
@@ -196,10 +188,6 @@ Categories=Settings;
 EOF
     chmod +x $HOME/Desktop/Theme-Manager.desktop
 }
-
-# ========================
-# Main Installation Flow
-# ========================
 
 main() {
     clear
