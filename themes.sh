@@ -77,7 +77,6 @@ done
 # Install new cursor themes
 declare -a cursor_urls=(
     "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/WinSur-dark-cursors.tar.gz"
-    "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Naroz-vr2b-Linux.zip"
 )
 
 for url in "${cursor_urls[@]}"; do
