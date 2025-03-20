@@ -32,22 +32,6 @@ GENMON_SCRIPT_DIR="$HOME/.config/xfce4/genmon-scripts"
 print_msg $BLUE "Creating necessary directories..."
 mkdir -p $ICON_DIR $THEME_DIR $CURSOR_DIR $WALLPAPER_DIR $GENMON_SCRIPT_DIR
 
-# Install cursor theme
-print_msg $YELLOW "Installing cursor theme..."
-wget -q --show-progress https://github.com/ful1e5/apple_cursor/releases/download/v2.0.1/macOS-White.tar.xz -O cursors.tar.xz
-
-if [ $? -eq 0 ]; then
-    if file cursors.tar.xz | grep -q 'XZ compressed data'; then
-        tar -xf cursors.tar.xz -C $CURSOR_DIR
-        rm -f cursors.tar.xz
-        print_msg $GREEN "Cursor theme installed successfully."
-    else
-        print_msg $RED "Downloaded file is not a valid tar.xz archive."
-    fi
-else
-    print_msg $RED "Failed to download cursor theme."
-fi
-
 # Install icons
 print_msg $YELLOW "Installing icons..."
 wget -q https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz -O icons.tar.xz
