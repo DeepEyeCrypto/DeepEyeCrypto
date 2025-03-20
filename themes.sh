@@ -74,6 +74,25 @@ for url in "${wallpaper_urls[@]}"; do
     wget -q --show-progress $url -O "$WALLPAPER_DIR/$filename"
 done
 
+# Install new cursor themes
+declare -a cursor_urls=(
+    "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/WinSur-dark-cursors.tar.gz"
+    "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Naroz-vr2b-Linux.zip"
+)
+
+for url in "${cursor_urls[@]}"; do
+    print_msg $YELLOW "Installing cursor theme: $(basename $url)"
+    wget -q $url -O cursor.tar.gz
+    tar -xf cursor.tar.gz -C $CURSOR_DIR
+    rm -f cursor.tar.gz
+done
+
+# Install dock plank
+print_msg $YELLOW "Installing dock plank..."
+wget -q https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/mcOS-BS-Extra-Icons.zip -O dock_plank.zip
+unzip -q dock_plank.zip -d $ICON_DIR
+rm -f dock_plank.zip
+
 # Configure clock widget
 print_msg $BLUE "Creating clock widget..."
 cat > $GENMON_SCRIPT_DIR/clock.sh <<EOF
