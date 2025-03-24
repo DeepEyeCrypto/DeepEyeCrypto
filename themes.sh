@@ -1,117 +1,133 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/bin/bash
 
-# Define directories
-THEME_DIR="$HOME/.themes"
+# Define colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print messages in color
+print_msg() {
+    color=$1
+    msg=$2
+    echo -e "${color}${msg}${NC}"
+}
+
+# Install required packages
+print_msg $BLUE "Updating packages..."
+pkg update -y
+print_msg $BLUE "Installing required packages..."
+pkg install -y wget tar x11-repo
+pkg install -y xfce4 xfce4-terminal xfce4-genmon-plugin
+
+# Define paths
 ICON_DIR="$HOME/.icons"
+THEME_DIR="$HOME/.themes"
+CURSOR_DIR="$HOME/.icons"
 WALLPAPER_DIR="$PREFIX/share/backgrounds/xfce"
-TEMP_DIR="$HOME/temp_xfce_setup"
+GENMON_SCRIPT_DIR="$HOME/.config/xfce4/genmon-scripts"
 
-# Exit on error
-set -e
+# Create directories
+print_msg $BLUE "Creating necessary directories..."
+mkdir -p $ICON_DIR $THEME_DIR $CURSOR_DIR $WALLPAPER_DIR $GENMON_SCRIPT_DIR
 
-# Create directories if they don't exist
-mkdir -p "$THEME_DIR" "$ICON_DIR" "$WALLPAPER_DIR" "$TEMP_DIR"
+# Install icons
+print_msg $YELLOW "Installing icons..."
+wget -q https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz -O icons.tar.xz
+tar -xf icons.tar.xz -C $ICON_DIR
+rm -f icons.tar.xz
 
-# Update and install dependencies
-echo "Updating Termux and installing dependencies..."
-pkg update -y && pkg upgrade -y || { echo "Package update failed"; exit 1; }
-pkg install x11-repo -y
-pkg install termux-x11-nightly xfce4 xfce4-goodies git wget unzip tar -y || { echo "Package installation failed"; exit 1; }
-pkg install gtk2-engines-murrine gtk3-engines -y
+# Install themes
+declare -a theme_urls=(
+    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark-solid-nord.tar.xz"
+    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark.tar.xz"
+    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Light.tar.xz"
+)
 
-# Download and install Themes
-echo "Installing Themes..."
-wget -q --show-progress -P "$TEMP_DIR" "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark-solid-nord.tar.xz" || echo "Failed to download WhiteSur-Dark-solid-nord"
-wget -q --show-progress -P "$TEMP_DIR" "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark.tar.xz" || echo "Failed to download WhiteSur-Dark"
-wget -q --show-progress -P "$TEMP_DIR" "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Light.tar.xz" || echo "Failed to download WhiteSur-Light"
-for tarfile in "$TEMP_DIR"/*.tar.xz; do
-    [ -f "$tarfile" ] && tar -xJf "$tarfile" -C "$THEME_DIR" || echo "Failed to extract $tarfile"
+for url in "${theme_urls[@]}"; do
+    print_msg $YELLOW "Installing theme: $(basename $url)"
+    wget -q $url -O theme.tar.xz
+    tar -xf theme.tar.xz -C $THEME_DIR
+    rm -f theme.tar.xz
 done
 
-# Download and install Icons
-echo "Installing Icons..."
-wget -q --show-progress -P "$TEMP_DIR" "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz" || echo "Failed to download WhiteSur icons"
-wget -q --show-progress -P "$TEMP_DIR" "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/mcOS-BS-Extra-Icons.zip" || echo "Failed to download mcOS-BS-Extra-Icons"
-[ -f "$TEMP_DIR/01-WhiteSur.tar.xz" ] && tar -xJf "$TEMP_DIR/01-WhiteSur.tar.xz" -C "$ICON_DIR" || echo "Failed to extract WhiteSur icons"
-[ -f "$TEMP_DIR/mcOS-BS-Extra-Icons.zip" ] && unzip -o "$TEMP_DIR/mcOS-BS-Extra-Icons.zip" -d "$ICON_DIR" || echo "Failed to extract mcOS-BS-Extra-Icons"
+# Install wallpapers
+declare -a wallpaper_urls=(
+    "https://github.com/vinceliuice/WhiteSur-wallpapers/blob/main/4k/Monterey-dark.jpg"
+    "https://github.com/vinceliuice/WhiteSur-wallpapers/blob/main/4k/WhiteSur-dark.jpg"
+    "https://github.com/vinceliuice/WhiteSur-wallpapers/blob/main/4k/Ventura-dark.jpg"
+    "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg"
+    "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg"
+    "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg"
+    "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg"
+    "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg"
+)
 
-# Download and install Cursor Themes
-echo "Installing Cursor Themes..."
-wget -q --show-progress -P "$TEMP_DIR" "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/WinSur-dark-cursors.tar.gz" || echo "Failed to download WinSur-dark-cursors"
-wget -q --show-progress -P "$TEMP_DIR" "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Naroz-vr2b-Linux.zip" || echo "Failed to download Naroz-vr2b-Linux"
-[ -f "$TEMP_DIR/WinSur-dark-cursors.tar.gz" ] && tar -xzf "$TEMP_DIR/WinSur-dark-cursors.tar.gz" -C "$ICON_DIR" || echo "Failed to extract WinSur-dark-cursors"
-[ -f "$TEMP_DIR/Naroz-vr2b-Linux.zip" ] && unzip -o "$TEMP_DIR/Naroz-vr2b-Linux.zip" -d "$ICON_DIR" || echo "Failed to extract Naroz-vr2b-Linux"
+for url in "${wallpaper_urls[@]}"; do
+    if [[ $url == *"github.com"* ]]; then
+        url="${url/github.com\/vinceliuice\/WhiteSur-wallpapers\/blob/raw.githubusercontent.com\/vinceliuice\/WhiteSur-wallpapers}"
+    fi
+    
+    filename=$(basename $url)
+    print_msg $YELLOW "Downloading wallpaper: $filename"
+    wget -q --show-progress $url -O "$WALLPAPER_DIR/$filename"
+done
 
-# Download Wallpapers
-echo "Installing Wallpapers..."
-wget -q --show-progress -P "$WALLPAPER_DIR" "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/main/4k/Monterey-dark.jpg" || echo "Failed to download Monterey-dark"
-wget -q --show-progress -P "$WALLPAPER_DIR" "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/main/4k/WhiteSur-dark.jpg" || echo "Failed to download WhiteSur-dark"
-wget -q --show-progress -P "$WALLPAPER_DIR" "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/main/4k/Ventura-dark.jpg" || echo "Failed to download Ventura-dark"
-wget -q --show-progress -P "$WALLPAPER_DIR" "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg" -O "$WALLPAPER_DIR/macos-big-sur.jpg" || echo "Failed to download macos-big-sur"
-wget -q --show-progress -P "$WALLPAPER_DIR" "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg" -O "$WALLPAPER_DIR/macos-fusion.jpg" || echo "Failed to download macos-fusion"
-wget -q --show-progress -P "$WALLPAPER_DIR" "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg" -O "$WALLPAPER_DIR/macos-sonoma-1.jpeg" || echo "Failed to download macos-sonoma-1"
-wget -q --show-progress -P "$WALLPAPER_DIR" "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg" -O "$WALLPAPER_DIR/macos-sonoma-2.jpeg" || echo "Failed to download macos-sonoma-2"
-wget -q --show-progress -P "$WALLPAPER_DIR" "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg" -O "$WALLPAPER_DIR/macos-high-sierra.jpg" || echo "Failed to download macos-high-sierra"
+# Install new cursor themes
+declare -a cursor_urls=(
+    "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/WinSur-dark-cursors.tar.gz"
+)
 
-# XFCE Startup Script
-echo "Creating XFCE startup script..."
-cat > "$HOME/start-xfce.sh" << EOL
-#!/data/data/com.termux/files/usr/bin/bash
-termux-x11 :1 &
-sleep 2
-export DISPLAY=:1
-xfce4-session
-EOL
-chmod +x "$HOME/start-xfce.sh"
+for url in "${cursor_urls[@]}"; do
+    print_msg $YELLOW "Installing cursor theme: $(basename $url)"
+    wget -q $url -O cursor.tar.gz
+    tar -xf cursor.tar.gz -C $CURSOR_DIR
+    rm -f cursor.tar.gz
+done
 
-# XFCE Configuration
-echo "Configuring XFCE..."
-mkdir -p "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml"
-cat > "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml" << EOL
-<?xml version="1.0" encoding="UTF-8"?>
-<channel name="xfce4-desktop" version="1.0">
-    <property name="backdrop" type="empty">
-        <property name="screen0" type="empty">
-            <property name="monitor0" type="empty">
-                <property name="workspace0" type="empty">
-                    <property name="color-style" type="int" value="0"/>
-                    <property name="image-style" type="int" value="5"/>
-                    <property name="last-image" type="string" value="$WALLPAPER_DIR/Monterey-dark.jpg"/>
-                </property>
-            </property>
-        </property>
-    </property>
-</channel>
-EOL
+# Install dock plank
+print_msg $YELLOW "Installing dock plank..."
+wget -q https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/mcOS-BS-Extra-Icons.zip -O dock_plank.zip
+unzip -q dock_plank.zip -d $ICON_DIR
+rm -f dock_plank.zip
 
-cat > "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml" << EOL
-<?xml version="1.0" encoding="UTF-8"?>
-<channel name="xfwm4" version="1.0">
-    <property name="general" type="empty">
-        <property name="theme" type="string" value="WhiteSur-Dark"/>
-        <property name="title_font" type="string" value="Sans Bold 10"/>
-    </property>
-</channel>
-EOL
+# Configure clock widget
+print_msg $BLUE "Creating clock widget..."
+cat > $GENMON_SCRIPT_DIR/clock.sh <<EOF
+#!/bin/bash
+echo "<txt> \$(date +'%a %d %b %H:%M') </txt>"
+echo "<tool>Calendar</tool>"
+EOF
 
-cat > "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml" << EOL
-<?xml version="1.0" encoding="UTF-8"?>
-<channel name="xsettings" version="1.0">
-    <property name="Net" type="empty">
-        <property name="ThemeName" type="string" value="WhiteSur-Dark"/>
-        <property name="IconThemeName" type="string" value="WhiteSur"/>
-        <property name="CursorThemeName" type="string" value="WinSur-dark-cursors"/>
-    </property>
-    <property name="Gtk" type="empty">
-        <property name="FontName" type="string" value="Sans 10"/>
-    </property>
-</channel>
-EOL
+chmod +x $GENMON_SCRIPT_DIR/clock.sh
 
-# Cleanup
-echo "Cleaning up..."
-rm -rf "$TEMP_DIR"
+# Apply theme settings
+print_msg $BLUE "Applying theme settings..."
+xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark-solid-nord"
+xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark-solid-nord"
+xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
+xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "WhiteSur-cursors"
 
-echo "Setup complete!"
-echo "Run './start-xfce.sh' to start XFCE"
-echo "Ensure Termux:X11 app is installed and running"
+# Set wallpaper
+first_wallpaper=$(ls $WALLPAPER_DIR | head -n 1)
+print_msg $BLUE "Setting wallpaper..."
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$WALLPAPER_DIR/$first_wallpaper"
+
+# Add clock widget to panel
+print_msg $BLUE "Configuring clock widget..."
+plugin_ids=$(xfconf-query -c xfce4-panel -p /plugins/plugin-ids | sed 's/[^0-9]/ /g')
+last_id=$(echo $plugin_ids | awk '{print $NF}')
+new_id=$((last_id + 1))
+
+xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $new_id
+xfconf-query -c xfce4-panel -p /plugins/plugin-$new_id -n -t string -s "genmon"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$new_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/clock.sh"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$new_id/padding -n -t int -s 5
+xfconf-query -c xfce4-panel -p /plugins/plugin-$new_id/refresh-rate -n -t int -s 1
+
+# Restart panel to apply changes
+print_msg $GREEN "Restarting panel to apply changes..."
+xfce4-panel --restart
+
+print_msg $GREEN "Installation complete! Your macOS-style theme with clock widget is ready."
