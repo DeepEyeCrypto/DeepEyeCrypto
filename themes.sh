@@ -20,22 +20,12 @@ if [ "$EUID" -eq 0 ]; then
     exit 1
 fi
 
-# Install required packages (removed conky)
+# Install required packages
 print_msg $BLUE "Updating package list..."
 pkg update -y || { print_msg $RED "Failed to update packages"; exit 1; }
 print_msg $BLUE "Installing required packages..."
 pkg install -y wget tar unzip x11-repo curl jq || { print_msg $RED "Failed to install basic packages"; exit 1; }
 pkg install -y xfce4 xfce4-terminal xfce4-genmon-plugin thunar || { print_msg $RED "Failed to install XFCE packages"; exit 1; }
-
-# Check if conky is available (optional)
-print_msg $BLUE "Checking for conky availability..."
-if pkg install -y conky 2>/dev/null; then
-    CONKY_AVAILABLE=true
-    print_msg $GREEN "Conky installed successfully!"
-else
-    CONKY_AVAILABLE=false
-    print_msg $YELLOW "Conky not found, proceeding without it..."
-fi
 
 # Define paths
 ICON_DIR="$HOME/.icons"
@@ -44,17 +34,51 @@ CURSOR_DIR="$HOME/.icons"
 WALLPAPER_DIR="$PREFIX/share/backgrounds/xfce"
 GENMON_SCRIPT_DIR="$HOME/.config/xfce4/genmon-scripts"
 DESKTOP_ICON_DIR="$HOME/Desktop"
-CONKY_DIR="$HOME/.config/conky"
 
 # Create directories
 print_msg $BLUE "Creating necessary directories..."
-mkdir -p $ICON_DIR $THEME_DIR $CURSOR_DIR $WALLPAPER_DIR $GENMON_SCRIPT_DIR $DESKTOP_ICON_DIR $CONKY_DIR
+mkdir -p $ICON_DIR $THEME_DIR $CURSOR_DIR $WALLPAPER_DIR $GENMON_SCRIPT_DIR $DESKTOP_ICON_DIR
+
+# Function to download and verify
+download_and_extract() {
+    url=$1
+    dest_dir=$2
+    filename=$(basename $url)
+    max_attempts=3
+    attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        print_msg $YELLOW "Downloading $filename (Attempt $attempt/$max_attempts)..."
+        wget -q --show-progress $url -O "$filename"
+        
+        # Check if file exists and is not empty
+        if [ -s "$filename" ]; then
+            print_msg $BLUE "Verifying $filename..."
+            if tar -tzf "$filename" >/dev/null 2>&1; then
+                print_msg $GREEN "Extracting $filename to $dest_dir..."
+                tar -xzf "$filename" -C "$dest_dir" || { print_msg $RED "Failed to extract $filename"; rm -f "$filename"; exit 1; }
+                rm -f "$filename"
+                return 0
+            else
+                print_msg $RED "File $filename is corrupt or incomplete"
+                rm -f "$filename"
+            fi
+        else
+            print_msg $RED "Download failed: $filename is empty or not downloaded"
+            rm -f "$filename" 2>/dev/null
+        fi
+        
+        attempt=$((attempt + 1))
+        [ $attempt -le $max_attempts ] && print_msg $YELLOW "Retrying in 2 seconds..." && sleep 2
+    done
+    
+    print_msg $RED "Failed to download/extract $filename after $max_attempts attempts"
+    exit 1
+}
 
 # Install icons
-print_msg $YELLOW "Installing icons..."
-wget -q --show-progress https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz -O icons.tar.xz
-tar -xf icons.tar.xz -C $ICON_DIR || { print_msg $RED "Failed to extract icons"; exit 1; }
-rm -f icons.tar.xz
+print_msg $YELLOW "Installing WhiteSur icons..."
+download_and_extract "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz" "$ICON_DIR"
 
 # Install custom desktop icons
 print_msg $YELLOW "Installing custom desktop icons..."
@@ -65,10 +89,7 @@ declare -a desktop_icon_sets=(
 )
 
 for url in "${desktop_icon_sets[@]}"; do
-    print_msg $YELLOW "Installing icon set: $(basename $url)"
-    wget -q --show-progress $url -O desktop_icons.tar.gz
-    tar -xzf desktop_icons.tar.gz -C $ICON_DIR || { print_msg $RED "Failed to extract $(basename $url)"; exit 1; }
-    rm -f desktop_icons.tar.gz
+    download_and_extract "$url" "$ICON_DIR"
 done
 
 # Create desktop launchers
@@ -103,6 +124,7 @@ EOF
 chmod +x "$DESKTOP_ICON_DIR"/*.desktop
 
 # Install themes
+print_msg $YELLOW "Installing themes..."
 declare -a theme_urls=(
     "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark-solid-nord.tar.xz"
     "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark.tar.xz"
@@ -110,13 +132,11 @@ declare -a theme_urls=(
 )
 
 for url in "${theme_urls[@]}"; do
-    print_msg $YELLOW "Installing theme: $(basename $url)"
-    wget -q --show-progress $url -O theme.tar.xz
-    tar -xf theme.tar.xz -C $THEME_DIR || { print_msg $RED "Failed to extract theme $(basename $url)"; exit 1; }
-    rm -f theme.tar.xz
+    download_and_extract "$url" "$THEME_DIR"
 done
 
 # Install wallpapers
+print_msg $YELLOW "Installing wallpapers..."
 declare -a wallpaper_urls=(
     "https://raw.githubusercontent.com/vinceliuice/WhiteSur-wallpapers/main/4k/Monterey-dark.jpg"
     "https://raw.githubusercontent.com/vinceliuice/WhiteSur-wallpapers/main/4k/WhiteSur-dark.jpg"
@@ -131,6 +151,7 @@ for url in "${wallpaper_urls[@]}"; do
 done
 
 # Install cursor themes
+print_msg $YELLOW "Installing cursor themes..."
 declare -a cursor_urls=(
     "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/WinSur-dark-cursors.tar.gz"
     "https://github.com/vinceliuice/Qogir-theme/raw/master/src/cursors/Qogir-cursors.tar.gz"
@@ -138,10 +159,7 @@ declare -a cursor_urls=(
 )
 
 for url in "${cursor_urls[@]}"; do
-    print_msg $YELLOW "Installing cursor theme: $(basename $url)"
-    wget -q --show-progress $url -O cursor.tar.gz
-    tar -xf cursor.tar.gz -C $CURSOR_DIR || { print_msg $RED "Failed to extract cursor $(basename $url)"; exit 1; }
-    rm -f cursor.tar.gz
+    download_and_extract "$url" "$CURSOR_DIR"
 done
 
 # Install dock plank
@@ -159,7 +177,7 @@ echo "<tool>Full Date and Time</tool>"
 EOF
 chmod +x $GENMON_SCRIPT_DIR/clock.sh
 
-# Install system monitor widget (using genmon instead of conky)
+# Install system monitor widget
 print_msg $BLUE "Creating system monitor widget..."
 cat > $GENMON_SCRIPT_DIR/sysmon.sh <<EOF
 #!/bin/bash
@@ -185,55 +203,6 @@ echo "<txt> Weather: \$TEMP°C, \$DESC </txt>"
 echo "<tool>Current weather conditions</tool>"
 EOF
 chmod +x $GENMON_SCRIPT_DIR/weather.sh
-
-# Conky setup (only if available)
-if [ "$CONKY_AVAILABLE" = true ]; then
-    print_msg $BLUE "Creating Conky system monitor widget..."
-    cat > $CONKY_DIR/system_monitor.conf <<EOF
-conky.config = {
-    alignment = 'top_right',
-    background = false,
-    border_width = 1,
-    cpu_avg_samples = 2,
-    default_color = 'white',
-    default_outline_color = 'white',
-    default_shade_color = 'black',
-    draw_borders = false,
-    draw_graph_borders = true,
-    draw_outline = false,
-    draw_shades = false,
-    use_xft = true,
-    font = 'DejaVu Sans:size=10',
-    gap_x = 20,
-    gap_y = 60,
-    minimum_height = 5,
-    minimum_width = 5,
-    net_avg_samples = 2,
-    no_buffers = true,
-    out_to_console = false,
-    out_to_stderr = false,
-    extra_newline = false,
-    own_window = true,
-    own_window_class = 'Conky',
-    own_window_type = 'desktop',
-    own_window_transparent = true,
-    own_window_argb_visual = true,
-    stippled_borders = 0,
-    update_interval = 1.0,
-    uppercase = false,
-    use_spacer = 'none',
-    show_graph_scale = false,
-    show_graph_range = false
-}
-
-conky.text = [[
-\${color grey}CPU Usage:\${color} \$cpu% \$cpubar
-\${color grey}RAM Usage:\${color} \$mem/\$memmax \$membar
-\${color grey}Disk Usage:\${color} \$fs_used / \$fs_size \$fs_bar
-\${color grey}Network:\${color} Down: \${downspeed} Up: \${upspeed}
-]]
-EOF
-fi
 
 # Apply theme settings
 print_msg $BLUE "Applying theme settings..."
@@ -278,12 +247,6 @@ xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/command -n -t string 
 xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/padding -n -t int -s 5
 xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/refresh-rate -n -t int -s 300
 
-# Start Conky if available
-if [ "$CONKY_AVAILABLE" = true ]; then
-    print_msg $BLUE "Starting Conky system monitor..."
-    echo "conky -c $CONKY_DIR/system_monitor.conf &" >> "$HOME/.config/xfce4/xfce4-session.rc"
-fi
-
 # Restart panel and desktop
 print_msg $GREEN "Restarting panel and desktop to apply changes..."
 xfce4-panel --restart || print_msg $YELLOW "Panel restart failed, please restart manually"
@@ -293,9 +256,6 @@ print_msg $GREEN "Installation complete! Your desktop now has widgets:"
 print_msg $YELLOW "- Panel Clock Widget"
 print_msg $YELLOW "- Panel System Monitor Widget"
 print_msg $YELLOW "- Panel Weather Widget (edit weather.sh with API key and city ID)"
-if [ "$CONKY_AVAILABLE" = true ]; then
-    print_msg $YELLOW "- Conky System Monitor (top-right corner)"
-fi
 print_msg $YELLOW "To get weather working:"
 print_msg $YELLOW "1. Get API key from openweathermap.org"
 print_msg $YELLOW "2. Find your city ID"
