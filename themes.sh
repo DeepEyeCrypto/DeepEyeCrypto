@@ -39,7 +39,7 @@ DESKTOP_ICON_DIR="$HOME/Desktop"
 print_msg $BLUE "Creating necessary directories..."
 mkdir -p $ICON_DIR $THEME_DIR $CURSOR_DIR $WALLPAPER_DIR $GENMON_SCRIPT_DIR $DESKTOP_ICON_DIR
 
-# Function to download and verify
+# Function to download and extract with fallback
 download_and_extract() {
     url=$1
     dest_dir=$2
@@ -56,9 +56,8 @@ download_and_extract() {
             print_msg $BLUE "Verifying $filename..."
             if tar -tzf "$filename" >/dev/null 2>&1; then
                 print_msg $GREEN "Extracting $filename to $dest_dir..."
-                tar -xzf "$filename" -C "$dest_dir" || { print_msg $RED "Failed to extract $filename"; rm -f "$filename"; exit 1; }
-                rm -f "$filename"
-                return 0
+                tar -xzf "$filename" -C "$dest_dir" && { rm -f "$filename"; return 0; }
+                print_msg $RED "Failed to extract $filename, but continuing..."
             else
                 print_msg $RED "File $filename is corrupt or incomplete"
                 rm -f "$filename"
@@ -72,8 +71,8 @@ download_and_extract() {
         [ $attempt -le $max_attempts ] && print_msg $YELLOW "Retrying in 2 seconds..." && sleep 2
     done
     
-    print_msg $RED "Failed to download/extract $filename after $max_attempts attempts"
-    exit 1
+    print_msg $YELLOW "Failed to download/extract $filename after $max_attempts attempts, skipping..."
+    return 1
 }
 
 # Install icons
@@ -92,7 +91,7 @@ for url in "${desktop_icon_sets[@]}"; do
     download_and_extract "$url" "$ICON_DIR"
 done
 
-# Create desktop launchers
+# Create desktop launchers with fallback icons
 print_msg $BLUE "Creating desktop launchers..."
 cat > "$DESKTOP_ICON_DIR/Terminal.desktop" <<EOF
 [Desktop Entry]
@@ -108,7 +107,7 @@ cat > "$DESKTOP_ICON_DIR/Settings.desktop" <<EOF
 Name=Settings
 Exec=xfce4-settings-manager
 Type=Application
-Icon=RevengeOS-macOS/applications-system
+Icon=${ICON_DIR}/RevengeOS-macOS/applications-system || ${ICON_DIR}/Qogir-manjaro/applications-system
 Terminal=false
 EOF
 
@@ -204,11 +203,11 @@ echo "<tool>Current weather conditions</tool>"
 EOF
 chmod +x $GENMON_SCRIPT_DIR/weather.sh
 
-# Apply theme settings
+# Apply theme settings with fallback
 print_msg $BLUE "Applying theme settings..."
 xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark-solid-nord"
 xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark-solid-nord"
-xfconf-query -c xsettings -p /Net/IconThemeName -s "RevengeOS-macOS"
+xfconf-query -c xsettings -p /Net/IconThemeName -s "RevengeOS-macOS" || xfconf-query -c xsettings -p /Net/IconThemeName -s "Qogir-manjaro"
 xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "macOS-Monterey"
 
 # Set wallpaper
@@ -260,3 +259,4 @@ print_msg $YELLOW "To get weather working:"
 print_msg $YELLOW "1. Get API key from openweathermap.org"
 print_msg $YELLOW "2. Find your city ID"
 print_msg $YELLOW "3. Edit $GENMON_SCRIPT_DIR/weather.sh"
+print_msg $YELLOW "Note: If RevengeOS-macOS icons failed, Qogir-manjaro is used as fallback."
