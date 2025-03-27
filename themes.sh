@@ -20,12 +20,22 @@ if [ "$EUID" -eq 0 ]; then
     exit 1
 fi
 
-# Install required packages including Conky for widgets
+# Install required packages (removed conky)
 print_msg $BLUE "Updating package list..."
 pkg update -y || { print_msg $RED "Failed to update packages"; exit 1; }
 print_msg $BLUE "Installing required packages..."
-pkg install -y wget tar unzip x11-repo conky curl jq || { print_msg $RED "Failed to install basic packages"; exit 1; }
+pkg install -y wget tar unzip x11-repo curl jq || { print_msg $RED "Failed to install basic packages"; exit 1; }
 pkg install -y xfce4 xfce4-terminal xfce4-genmon-plugin thunar || { print_msg $RED "Failed to install XFCE packages"; exit 1; }
+
+# Check if conky is available (optional)
+print_msg $BLUE "Checking for conky availability..."
+if pkg install -y conky 2>/dev/null; then
+    CONKY_AVAILABLE=true
+    print_msg $GREEN "Conky installed successfully!"
+else
+    CONKY_AVAILABLE=false
+    print_msg $YELLOW "Conky not found, proceeding without it..."
+fi
 
 # Define paths
 ICON_DIR="$HOME/.icons"
@@ -149,9 +159,37 @@ echo "<tool>Full Date and Time</tool>"
 EOF
 chmod +x $GENMON_SCRIPT_DIR/clock.sh
 
-# Install Conky system monitor widget
-print_msg $BLUE "Creating Conky system monitor widget..."
-cat > $CONKY_DIR/system_monitor.conf <<EOF
+# Install system monitor widget (using genmon instead of conky)
+print_msg $BLUE "Creating system monitor widget..."
+cat > $GENMON_SCRIPT_DIR/sysmon.sh <<EOF
+#!/bin/bash
+CPU=\$(top -bn1 | grep "Cpu(s)" | awk '{print \$2}' | cut -d. -f1)
+MEM=\$(free -h | awk '/^Mem:/ {print \$3 "/" \$2}')
+DISK=\$(df -h / | awk 'NR==2 {print \$3 "/" \$2}')
+echo "<txt> CPU: \$CPU% | RAM: \$MEM | Disk: \$DISK </txt>"
+echo "<tool>System Monitor</tool>"
+EOF
+chmod +x $GENMON_SCRIPT_DIR/sysmon.sh
+
+# Install weather widget
+print_msg $BLUE "Creating weather widget script..."
+cat > $GENMON_SCRIPT_DIR/weather.sh <<EOF
+#!/bin/bash
+# Replace YOUR_API_KEY and YOUR_CITY_ID with actual values
+API_KEY="YOUR_API_KEY"
+CITY_ID="YOUR_CITY_ID"
+WEATHER_DATA=\$(curl -s "http://api.openweathermap.org/data/2.5/weather?id=\$CITY_ID&appid=\$API_KEY&units=metric")
+TEMP=\$(echo \$WEATHER_DATA | jq -r '.main.temp')
+DESC=\$(echo \$WEATHER_DATA | jq -r '.weather[0].description')
+echo "<txt> Weather: \$TEMP°C, \$DESC </txt>"
+echo "<tool>Current weather conditions</tool>"
+EOF
+chmod +x $GENMON_SCRIPT_DIR/weather.sh
+
+# Conky setup (only if available)
+if [ "$CONKY_AVAILABLE" = true ]; then
+    print_msg $BLUE "Creating Conky system monitor widget..."
+    cat > $CONKY_DIR/system_monitor.conf <<EOF
 conky.config = {
     alignment = 'top_right',
     background = false,
@@ -195,21 +233,7 @@ conky.text = [[
 \${color grey}Network:\${color} Down: \${downspeed} Up: \${upspeed}
 ]]
 EOF
-
-# Install weather widget
-print_msg $BLUE "Creating weather widget script..."
-cat > $GENMON_SCRIPT_DIR/weather.sh <<EOF
-#!/bin/bash
-# Replace YOUR_API_KEY and YOUR_CITY_ID with actual values
-API_KEY="YOUR_API_KEY"
-CITY_ID="YOUR_CITY_ID"
-WEATHER_DATA=\$(curl -s "http://api.openweathermap.org/data/2.5/weather?id=\$CITY_ID&appid=\$API_KEY&units=metric")
-TEMP=\$(echo \$WEATHER_DATA | jq -r '.main.temp')
-DESC=\$(echo \$WEATHER_DATA | jq -r '.weather[0].description')
-echo "<txt> Weather: \$TEMP°C, \$DESC </txt>"
-echo "<tool>Current weather conditions</tool>"
-EOF
-chmod +x $GENMON_SCRIPT_DIR/weather.sh
+fi
 
 # Apply theme settings
 print_msg $BLUE "Applying theme settings..."
@@ -238,17 +262,27 @@ xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/command -n -t string -s
 xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/padding -n -t int -s 5
 xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/refresh-rate -n -t int -s 1
 
+# System monitor widget
+sysmon_id=$((last_id + 2))
+xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id -s $sysmon_id
+xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id -n -t string -s "genmon"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/sysmon.sh"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/padding -n -t int -s 5
+xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/refresh-rate -n -t int -s 5
+
 # Weather widget
-weather_id=$((last_id + 2))
-xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id -s $weather_id
+weather_id=$((last_id + 3))
+xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id -s $sysmon_id -s $weather_id
 xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id -n -t string -s "genmon"
 xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/weather.sh"
 xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/padding -n -t int -s 5
 xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/refresh-rate -n -t int -s 300
 
-# Start Conky
-print_msg $BLUE "Starting Conky system monitor..."
-echo "conky -c $CONKY_DIR/system_monitor.conf &" >> "$HOME/.config/xfce4/xfce4-session.rc"
+# Start Conky if available
+if [ "$CONKY_AVAILABLE" = true ]; then
+    print_msg $BLUE "Starting Conky system monitor..."
+    echo "conky -c $CONKY_DIR/system_monitor.conf &" >> "$HOME/.config/xfce4/xfce4-session.rc"
+fi
 
 # Restart panel and desktop
 print_msg $GREEN "Restarting panel and desktop to apply changes..."
@@ -257,8 +291,11 @@ killall xfdesktop && xfdesktop &
 
 print_msg $GREEN "Installation complete! Your desktop now has widgets:"
 print_msg $YELLOW "- Panel Clock Widget"
+print_msg $YELLOW "- Panel System Monitor Widget"
 print_msg $YELLOW "- Panel Weather Widget (edit weather.sh with API key and city ID)"
-print_msg $YELLOW "- Conky System Monitor (top-right corner)"
+if [ "$CONKY_AVAILABLE" = true ]; then
+    print_msg $YELLOW "- Conky System Monitor (top-right corner)"
+fi
 print_msg $YELLOW "To get weather working:"
 print_msg $YELLOW "1. Get API key from openweathermap.org"
 print_msg $YELLOW "2. Find your city ID"
