@@ -21,10 +21,10 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 # Install required packages including Conky for widgets
-print_msg $BLUE "Updating packages..."
+print_msg $BLUE "Updating package list..."
 pkg update -y || { print_msg $RED "Failed to update packages"; exit 1; }
 print_msg $BLUE "Installing required packages..."
-pkg install -y wget tar unzip x11-repo conky curl jq || { print_msg $RED "Failed to install packages"; exit 1; }
+pkg install -y wget tar unzip x11-repo conky curl jq || { print_msg $RED "Failed to install basic packages"; exit 1; }
 pkg install -y xfce4 xfce4-terminal xfce4-genmon-plugin thunar || { print_msg $RED "Failed to install XFCE packages"; exit 1; }
 
 # Define paths
@@ -196,7 +196,7 @@ conky.text = [[
 ]]
 EOF
 
-# Install weather widget (requires OpenWeatherMap API key)
+# Install weather widget
 print_msg $BLUE "Creating weather widget script..."
 cat > $GENMON_SCRIPT_DIR/weather.sh <<EOF
 #!/bin/bash
@@ -244,15 +244,15 @@ xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -
 xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id -n -t string -s "genmon"
 xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/weather.sh"
 xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/padding -n -t int -s 5
-xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/refresh-rate -n -t int -s 300  # Update every 5 minutes
+xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/refresh-rate -n -t int -s 300
 
 # Start Conky
 print_msg $BLUE "Starting Conky system monitor..."
-echo "conky -c $CONKY_DIR/system_monitor.conf &" >> "$HOME/.config/xfce4/xfce4-session.rc"  # Auto-start with XFCE
+echo "conky -c $CONKY_DIR/system_monitor.conf &" >> "$HOME/.config/xfce4/xfce4-session.rc"
 
 # Restart panel and desktop
 print_msg $GREEN "Restarting panel and desktop to apply changes..."
-xfce4-panel --restart
+xfce4-panel --restart || print_msg $YELLOW "Panel restart failed, please restart manually"
 killall xfdesktop && xfdesktop &
 
 print_msg $GREEN "Installation complete! Your desktop now has widgets:"
