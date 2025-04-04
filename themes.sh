@@ -20,6 +20,22 @@ if [ "$EUID" -eq 0 ]; then
     exit 1
 fi
 
+# Check for running apt processes
+print_msg $YELLOW "Checking for running apt processes..."
+apt_pids=$(ps aux | grep [a]pt | awk '{print $2}')
+if [ -n "$apt_pids" ]; then
+    print_msg $RED "Found running apt processes: $apt_pids"
+    print_msg $YELLOW "Terminating running apt processes..."
+    kill -9 $apt_pids
+fi
+
+# Remove lock files if no apt processes are running
+if [ -z "$(ps aux | grep [a]pt)" ]; then
+    print_msg $YELLOW "Removing apt lock files..."
+    rm -rf /data/data/com.termux/files/usr/var/lib/apt/lists/lock
+    rm -rf /data/data/com.termux/files/usr/var/cache/apt/archives/lock
+fi
+
 # Install required packages
 print_msg $BLUE "Updating package list..."
 pkg update -y || { print_msg $RED "Failed to update packages"; exit 1; }
@@ -207,7 +223,7 @@ chmod +x $GENMON_SCRIPT_DIR/weather.sh
 print_msg $BLUE "Applying theme settings..."
 xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark-solid-nord" || print_msg $RED "Failed to apply theme: WhiteSur-Dark-solid-nord"
 xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark-solid-nord" || print_msg $RED "Failed to apply window manager theme: WhiteSur-Dark-solid-nord"
-xfconf-query -c xsettings -p /Net/IconThemeName -s "RevengeOS-macOS" || xfconf-query -c xsettings -p /Net/IconThemeName -s "Qogir-manjaro" || print_msg $RED "Failed to apply icon theme: RevengeOS-macOS and fallback"
+xfconf-query -c xsettings -p /Net/IconThemeName -s "RevengeOS-macOS" || xfconf-query -c xsettings -p /Net/IconThemeName -s "Qogir-manjaro" || print_msg $RED "Failed to apply icon theme: RevengeOS-macOS or Qogir-manjaro"
 xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "macOS-Monterey" || print_msg $RED "Failed to apply cursor theme: macOS-Monterey"
 
 # Set wallpaper
