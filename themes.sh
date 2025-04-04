@@ -1,278 +1,117 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 
-# Define colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Function to print messages in color
-print_msg() {
-    color=$1
-    msg=$2
-    echo -e "${color}${msg}${NC}"
-}
-
-# Check if running as root
-if [ "$EUID" -eq 0 ]; then
-    print_msg $RED "Please don't run this script as root!"
-    exit 1
-fi
-
-# Check for running apt processes
-print_msg $YELLOW "Checking for running apt processes..."
-apt_pids=$(ps aux | grep [a]pt | awk '{print $2}')
-if [ -n "$apt_pids" ]; then
-    print_msg $RED "Found running apt processes: $apt_pids"
-    print_msg $YELLOW "Terminating running apt processes..."
-    kill -9 $apt_pids
-fi
-
-# Remove lock files if no apt processes are running
-if [ -z "$(ps aux | grep [a]pt)" ]; then
-    print_msg $YELLOW "Removing apt lock files..."
-    rm -rf /data/data/com.termux/files/usr/var/lib/apt/lists/lock
-    rm -rf /data/data/com.termux/files/usr/var/cache/apt/archives/lock
-fi
-
-# Install required packages
-print_msg $BLUE "Updating package list..."
-pkg update -y || { print_msg $RED "Failed to update packages"; exit 1; }
-print_msg $BLUE "Installing required packages..."
-pkg install -y wget tar unzip x11-repo curl jq || { print_msg $RED "Failed to install basic packages"; exit 1; }
-pkg install -y xfce4 xfce4-terminal xfce4-genmon-plugin thunar || { print_msg $RED "Failed to install XFCE packages"; exit 1; }
-
-# Define paths
-ICON_DIR="$HOME/.icons"
+# Define directories
 THEME_DIR="$HOME/.themes"
-CURSOR_DIR="$HOME/.icons"
+ICON_DIR="$HOME/.icons"
 WALLPAPER_DIR="$PREFIX/share/backgrounds/xfce"
-GENMON_SCRIPT_DIR="$HOME/.config/xfce4/genmon-scripts"
-DESKTOP_ICON_DIR="$HOME/Desktop"
+TEMP_DIR="$HOME/temp_xfce_setup"
 
-# Create directories
-print_msg $BLUE "Creating necessary directories..."
-mkdir -p $ICON_DIR $THEME_DIR $CURSOR_DIR $WALLPAPER_DIR $GENMON_SCRIPT_DIR $DESKTOP_ICON_DIR
+# Exit on error
+set -e
 
-# Function to download and extract with fallback
-download_and_extract() {
-    url=$1
-    dest_dir=$2
-    filename=$(basename $url)
-    max_attempts=3
-    attempt=1
+# Create directories if they don't exist
+mkdir -p "$THEME_DIR" "$ICON_DIR" "$WALLPAPER_DIR" "$TEMP_DIR"
 
-    while [ $attempt -le $max_attempts ]; do
-        print_msg $YELLOW "Downloading $filename (Attempt $attempt/$max_attempts)..."
-        wget -q --show-progress $url -O "$filename"
-        
-        # Check if file exists and is not empty
-        if [ -s "$filename" ]; then
-            print_msg $BLUE "Verifying $filename..."
-            if tar -tzf "$filename" >/dev/null 2>&1; then
-                print_msg $GREEN "Extracting $filename to $dest_dir..."
-                tar -xzf "$filename" -C "$dest_dir" && { rm -f "$filename"; return 0; }
-                print_msg $RED "Failed to extract $filename, but continuing..."
-            else
-                print_msg $RED "File $filename is corrupt or incomplete"
-                rm -f "$filename"
-            fi
-        else
-            print_msg $RED "Download failed: $filename is empty or not downloaded"
-            rm -f "$filename" 2>/dev/null
-        fi
-        
-        attempt=$((attempt + 1))
-        [ $attempt -le $max_attempts ] && print_msg $YELLOW "Retrying in 2 seconds..." && sleep 2
-    done
-    
-    print_msg $YELLOW "Failed to download/extract $filename after $max_attempts attempts, skipping..."
-    return 1
-}
+# Update and install dependencies
+echo "Updating Termux and installing dependencies..."
+pkg update -y && pkg upgrade -y || { echo "Package update failed"; exit 1; }
+pkg install x11-repo -y
+pkg install termux-x11-nightly xfce4 xfce4-goodies git wget unzip tar -y || { echo "Package installation failed"; exit 1; }
+pkg install gtk2-engines-murrine gtk3-engines -y
 
-# Install icons
-print_msg $YELLOW "Installing WhiteSur icons..."
-download_and_extract "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz" "$ICON_DIR"
-
-# Install custom desktop icons
-print_msg $YELLOW "Installing custom desktop icons..."
-declare -a desktop_icon_sets=(
-    "https://github.com/yeyushengfan258/RevengeOS-Icon-Pack/raw/master/RevengeOS-macOS.tar.gz"
-    "https://github.com/vinceliuice/Qogir-icon-theme/raw/master/Qogir-manjaro.tar.gz"
-    "https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/tags/20230104.tar.gz"
-)
-
-for url in "${desktop_icon_sets[@]}"; do
-    download_and_extract "$url" "$ICON_DIR"
+# Download and install Themes
+echo "Installing Themes..."
+wget -q --show-progress -P "$TEMP_DIR" "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark-solid-nord.tar.xz" || echo "Failed to download WhiteSur-Dark-solid-nord"
+wget -q --show-progress -P "$TEMP_DIR" "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark.tar.xz" || echo "Failed to download WhiteSur-Dark"
+wget -q --show-progress -P "$TEMP_DIR" "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Light.tar.xz" || echo "Failed to download WhiteSur-Light"
+for tarfile in "$TEMP_DIR"/*.tar.xz; do
+    [ -f "$tarfile" ] && tar -xJf "$tarfile" -C "$THEME_DIR" || echo "Failed to extract $tarfile"
 done
 
-# Create desktop launchers with fallback icons
-print_msg $BLUE "Creating desktop launchers..."
-cat > "$DESKTOP_ICON_DIR/Terminal.desktop" <<EOF
-[Desktop Entry]
-Name=Terminal
-Exec=xfce4-terminal
-Type=Application
-Icon=Qogir-manjaro/applications-terminal
-Terminal=false
-EOF
+# Download and install Icons
+echo "Installing Icons..."
+wget -q --show-progress -P "$TEMP_DIR" "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz" || echo "Failed to download WhiteSur icons"
+wget -q --show-progress -P "$TEMP_DIR" "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/mcOS-BS-Extra-Icons.zip" || echo "Failed to download mcOS-BS-Extra-Icons"
+[ -f "$TEMP_DIR/01-WhiteSur.tar.xz" ] && tar -xJf "$TEMP_DIR/01-WhiteSur.tar.xz" -C "$ICON_DIR" || echo "Failed to extract WhiteSur icons"
+[ -f "$TEMP_DIR/mcOS-BS-Extra-Icons.zip" ] && unzip -o "$TEMP_DIR/mcOS-BS-Extra-Icons.zip" -d "$ICON_DIR" || echo "Failed to extract mcOS-BS-Extra-Icons"
 
-cat > "$DESKTOP_ICON_DIR/Settings.desktop" <<EOF
-[Desktop Entry]
-Name=Settings
-Exec=xfce4-settings-manager
-Type=Application
-Icon=${ICON_DIR}/RevengeOS-macOS/applications-system || ${ICON_DIR}/Qogir-manjaro/applications-system
-Terminal=false
-EOF
+# Download and install Cursor Themes
+echo "Installing Cursor Themes..."
+wget -q --show-progress -P "$TEMP_DIR" "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/WinSur-dark-cursors.tar.gz" || echo "Failed to download WinSur-dark-cursors"
+wget -q --show-progress -P "$TEMP_DIR" "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/Naroz-vr2b-Linux.zip" || echo "Failed to download Naroz-vr2b-Linux"
+[ -f "$TEMP_DIR/WinSur-dark-cursors.tar.gz" ] && tar -xzf "$TEMP_DIR/WinSur-dark-cursors.tar.gz" -C "$ICON_DIR" || echo "Failed to extract WinSur-dark-cursors"
+[ -f "$TEMP_DIR/Naroz-vr2b-Linux.zip" ] && unzip -o "$TEMP_DIR/Naroz-vr2b-Linux.zip" -d "$ICON_DIR" || echo "Failed to extract Naroz-vr2b-Linux"
 
-cat > "$DESKTOP_ICON_DIR/FileManager.desktop" <<EOF
-[Desktop Entry]
-Name=Files
-Exec=thunar
-Type=Application
-Icon=papirus-icon-theme-20230104/folder
-Terminal=false
-EOF
+# Download Wallpapers
+echo "Installing Wallpapers..."
+wget -q --show-progress -P "$WALLPAPER_DIR" "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/main/4k/Monterey-dark.jpg" || echo "Failed to download Monterey-dark"
+wget -q --show-progress -P "$WALLPAPER_DIR" "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/main/4k/WhiteSur-dark.jpg" || echo "Failed to download WhiteSur-dark"
+wget -q --show-progress -P "$WALLPAPER_DIR" "https://github.com/vinceliuice/WhiteSur-wallpapers/raw/main/4k/Ventura-dark.jpg" || echo "Failed to download Ventura-dark"
+wget -q --show-progress -P "$WALLPAPER_DIR" "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg" -O "$WALLPAPER_DIR/macos-big-sur.jpg" || echo "Failed to download macos-big-sur"
+wget -q --show-progress -P "$WALLPAPER_DIR" "https://4kwallpapers.com/images/wallpapers/macos-fusion-8k-7680x4320-12482.jpg" -O "$WALLPAPER_DIR/macos-fusion.jpg" || echo "Failed to download macos-fusion"
+wget -q --show-progress -P "$WALLPAPER_DIR" "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11577.jpeg" -O "$WALLPAPER_DIR/macos-sonoma-1.jpeg" || echo "Failed to download macos-sonoma-1"
+wget -q --show-progress -P "$WALLPAPER_DIR" "https://4kwallpapers.com/images/wallpapers/macos-sonoma-6016x6016-11576.jpeg" -O "$WALLPAPER_DIR/macos-sonoma-2.jpeg" || echo "Failed to download macos-sonoma-2"
+wget -q --show-progress -P "$WALLPAPER_DIR" "https://4kwallpapers.com/images/wallpapers/sierra-nevada-mountains-macos-high-sierra-mountain-range-5120x2880-8674.jpg" -O "$WALLPAPER_DIR/macos-high-sierra.jpg" || echo "Failed to download macos-high-sierra"
 
-chmod +x "$DESKTOP_ICON_DIR"/*.desktop
+# XFCE Startup Script
+echo "Creating XFCE startup script..."
+cat > "$HOME/start-xfce.sh" << EOL
+#!/data/data/com.termux/files/usr/bin/bash
+termux-x11 :1 &
+sleep 2
+export DISPLAY=:1
+xfce4-session
+EOL
+chmod +x "$HOME/start-xfce.sh"
 
-# Install themes
-print_msg $YELLOW "Installing themes..."
-declare -a theme_urls=(
-    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark-solid-nord.tar.xz"
-    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Dark.tar.xz"
-    "https://github.com/vinceliuice/WhiteSur-gtk-theme/raw/refs/heads/master/release/WhiteSur-Light.tar.xz"
-)
+# XFCE Configuration
+echo "Configuring XFCE..."
+mkdir -p "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml"
+cat > "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml" << EOL
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-desktop" version="1.0">
+    <property name="backdrop" type="empty">
+        <property name="screen0" type="empty">
+            <property name="monitor0" type="empty">
+                <property name="workspace0" type="empty">
+                    <property name="color-style" type="int" value="0"/>
+                    <property name="image-style" type="int" value="5"/>
+                    <property name="last-image" type="string" value="$WALLPAPER_DIR/Monterey-dark.jpg"/>
+                </property>
+            </property>
+        </property>
+    </property>
+</channel>
+EOL
 
-for url in "${theme_urls[@]}"; do
-    download_and_extract "$url" "$THEME_DIR"
-done
+cat > "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml" << EOL
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfwm4" version="1.0">
+    <property name="general" type="empty">
+        <property name="theme" type="string" value="WhiteSur-Dark"/>
+        <property name="title_font" type="string" value="Sans Bold 10"/>
+    </property>
+</channel>
+EOL
 
-# Install wallpapers
-print_msg $YELLOW "Installing wallpapers..."
-declare -a wallpaper_urls=(
-    "https://raw.githubusercontent.com/vinceliuice/WhiteSur-wallpapers/main/4k/Monterey-dark.jpg"
-    "https://raw.githubusercontent.com/vinceliuice/WhiteSur-wallpapers/main/4k/WhiteSur-dark.jpg"
-    "https://raw.githubusercontent.com/vinceliuice/WhiteSur-wallpapers/main/4k/Ventura-dark.jpg"
-    "https://4kwallpapers.com/images/wallpapers/macos-big-sur-apple-layers-fluidic-colorful-wwdc-stock-4096x2304-1455.jpg"
-)
+cat > "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml" << EOL
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xsettings" version="1.0">
+    <property name="Net" type="empty">
+        <property name="ThemeName" type="string" value="WhiteSur-Dark"/>
+        <property name="IconThemeName" type="string" value="WhiteSur"/>
+        <property name="CursorThemeName" type="string" value="WinSur-dark-cursors"/>
+    </property>
+    <property name="Gtk" type="empty">
+        <property name="FontName" type="string" value="Sans 10"/>
+    </property>
+</channel>
+EOL
 
-for url in "${wallpaper_urls[@]}"; do
-    filename=$(basename $url)
-    print_msg $YELLOW "Downloading wallpaper: $filename"
-    wget -q --show-progress $url -O "$WALLPAPER_DIR/$filename" || print_msg $YELLOW "Warning: Failed to download $filename"
-done
+# Cleanup
+echo "Cleaning up..."
+rm -rf "$TEMP_DIR"
 
-# Install cursor themes
-print_msg $YELLOW "Installing cursor themes..."
-declare -a cursor_urls=(
-    "https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/WinSur-dark-cursors.tar.gz"
-    "https://github.com/vinceliuice/Qogir-theme/raw/master/src/cursors/Qogir-cursors.tar.gz"
-    "https://github.com/ful1e5/apple_cursor/releases/download/v2.0.0/macOS-Monterey.tar.gz"
-)
-
-for url in "${cursor_urls[@]}"; do
-    download_and_extract "$url" "$CURSOR_DIR"
-done
-
-# Install dock plank
-print_msg $YELLOW "Installing dock plank..."
-wget -q --show-progress https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/mcOS-BS-Extra-Icons.zip -O dock_plank.zip
-unzip -q dock_plank.zip -d $ICON_DIR || { print_msg $RED "Failed to extract dock plank"; exit 1; }
-rm -f dock_plank.zip
-
-# Install panel clock widget
-print_msg $BLUE "Creating panel clock widget..."
-cat > $GENMON_SCRIPT_DIR/clock.sh <<EOF
-#!/bin/bash
-echo "<txt> \$(date +'%A, %d %B %Y  %I:%M:%S %p') </txt>"
-echo "<tool>Full Date and Time</tool>"
-EOF
-chmod +x $GENMON_SCRIPT_DIR/clock.sh
-
-# Install system monitor widget
-print_msg $BLUE "Creating system monitor widget..."
-cat > $GENMON_SCRIPT_DIR/sysmon.sh <<EOF
-#!/bin/bash
-CPU=\$(top -bn1 | grep "Cpu(s)" | awk '{print \$2}' | cut -d. -f1)
-MEM=\$(free -h | awk '/^Mem:/ {print \$3 "/" \$2}')
-DISK=\$(df -h / | awk 'NR==2 {print \$3 "/" \$2}')
-echo "<txt> CPU: \$CPU% | RAM: \$MEM | Disk: \$DISK </txt>"
-echo "<tool>System Monitor</tool>"
-EOF
-chmod +x $GENMON_SCRIPT_DIR/sysmon.sh
-
-# Install weather widget
-print_msg $BLUE "Creating weather widget script..."
-cat > $GENMON_SCRIPT_DIR/weather.sh <<EOF
-#!/bin/bash
-# Replace YOUR_API_KEY and YOUR_CITY_ID with actual values
-API_KEY="YOUR_API_KEY"
-CITY_ID="YOUR_CITY_ID"
-WEATHER_DATA=\$(curl -s "http://api.openweathermap.org/data/2.5/weather?id=\$CITY_ID&appid=\$API_KEY&units=metric")
-TEMP=\$(echo \$WEATHER_DATA | jq -r '.main.temp')
-DESC=\$(echo \$WEATHER_DATA | jq -r '.weather[0].description')
-echo "<txt> Weather: \$TEMP°C, \$DESC </txt>"
-echo "<tool>Current weather conditions</tool>"
-EOF
-chmod +x $GENMON_SCRIPT_DIR/weather.sh
-
-# Apply theme settings with fallback
-print_msg $BLUE "Applying theme settings..."
-xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark-solid-nord" || print_msg $RED "Failed to apply theme: WhiteSur-Dark-solid-nord"
-xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark-solid-nord" || print_msg $RED "Failed to apply window manager theme: WhiteSur-Dark-solid-nord"
-xfconf-query -c xsettings -p /Net/IconThemeName -s "RevengeOS-macOS" || xfconf-query -c xsettings -p /Net/IconThemeName -s "Qogir-manjaro" || print_msg $RED "Failed to apply icon theme: RevengeOS-macOS or Qogir-manjaro"
-xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "macOS-Monterey" || print_msg $RED "Failed to apply cursor theme: macOS-Monterey"
-
-# Set wallpaper
-first_wallpaper=$(ls $WALLPAPER_DIR | head -n 1)
-if [ -n "$first_wallpaper" ]; then
-    print_msg $BLUE "Setting wallpaper..."
-    xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$WALLPAPER_DIR/$first_wallpaper" || print_msg $RED "Failed to set wallpaper: $first_wallpaper"
-fi
-
-# Configure panel widgets
-print_msg $BLUE "Configuring panel widgets..."
-plugin_ids=$(xfconf-query -c xfce4-panel -p /plugins/plugin-ids | sed 's/[^0-9]/ /g' || echo "1 2 3 4 5")
-last_id=$(echo $plugin_ids | awk '{print $NF}')
-
-# Clock widget
-clock_id=$((last_id + 1))
-xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id || print_msg $RED "Failed to add clock widget"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id -n -t string -s "genmon" || print_msg $RED "Failed to configure clock widget"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/clock.sh" || print_msg $RED "Failed to set clock widget command"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/padding -n -t int -s 5 || print_msg $RED "Failed to set clock widget padding"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/refresh-rate -n -t int -s 1 || print_msg $RED "Failed to set clock widget refresh rate"
-
-# System monitor widget
-sysmon_id=$((last_id + 2))
-xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id -s $sysmon_id || print_msg $RED "Failed to add system monitor widget"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id -n -t string -s "genmon" || print_msg $RED "Failed to configure system monitor widget"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/sysmon.sh" || print_msg $RED "Failed to set system monitor widget command"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/padding -n -t int -s 5 || print_msg $RED "Failed to set system monitor widget padding"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/refresh-rate -n -t int -s 5 || print_msg $RED "Failed to set system monitor widget refresh rate"
-
-# Weather widget
-weather_id=$((last_id + 3))
-xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id -s $sysmon_id -s $weather_id || print_msg $RED "Failed to add weather widget"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id -n -t string -s "genmon" || print_msg $RED "Failed to configure weather widget"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/weather.sh" || print_msg $RED "Failed to set weather widget command"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/padding -n -t int -s 5 || print_msg $RED "Failed to set weather widget padding"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/refresh-rate -n -t int -s 300 || print_msg $RED "Failed to set weather widget refresh rate"
-
-# Restart panel and desktop
-print_msg $GREEN "Restarting panel and desktop to apply changes..."
-xfce4-panel --restart || print_msg $YELLOW "Panel restart failed, please restart manually"
-killall xfdesktop && xfdesktop &
-
-print_msg $GREEN "Installation complete! Your desktop now has widgets:"
-print_msg $YELLOW "- Panel Clock Widget"
-print_msg $YELLOW "- Panel System Monitor Widget"
-print_msg $YELLOW "- Panel Weather Widget (edit weather.sh with API key and city ID)"
-print_msg $YELLOW "To get weather working:"
-print_msg $YELLOW "1. Get API key from openweathermap.org"
-print_msg $YELLOW "2. Find your city ID"
-print_msg $YELLOW "3. Edit $GENMON_SCRIPT_DIR/weather.sh"
-print_msg $YELLOW "Note: If RevengeOS-macOS icons failed, Qogir-manjaro is used as fallback."
+echo "Setup complete!"
+echo "Run './start-xfce.sh' to start XFCE"
+echo "Ensure Termux:X11 app is installed and running"
