@@ -1,23 +1,7 @@
 #!/bin/bash
 
-# Define colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Function to print messages in color
-print_msg() {
-    color=$1
-    msg=$2
-    echo -e "${color}${msg}${NC}"
-}
-
 # Install required packages
-print_msg $BLUE "Updating packages..."
 pkg update -y
-print_msg $BLUE "Installing required packages..."
 pkg install -y wget tar x11-repo
 pkg install -y xfce4 xfce4-terminal xfce4-genmon-plugin
 
@@ -29,27 +13,16 @@ WALLPAPER_DIR="$PREFIX/share/backgrounds/xfce"
 GENMON_SCRIPT_DIR="$HOME/.config/xfce4/genmon-scripts"
 
 # Create directories
-print_msg $BLUE "Creating necessary directories..."
 mkdir -p $ICON_DIR $THEME_DIR $CURSOR_DIR $WALLPAPER_DIR $GENMON_SCRIPT_DIR
 
 # Install cursor theme
-print_msg $YELLOW "Installing cursor theme..."
-wget -q --show-progress https://github.com/ful1e5/apple_cursor/releases/download/v2.0.1/macOS-White.tar.xz -O cursors.tar.xz
-
-if [ $? -eq 0 ]; then
-    if file cursors.tar.xz | grep -q 'XZ compressed data'; then
-        tar -xf cursors.tar.xz -C $CURSOR_DIR
-        rm -f cursors.tar.xz
-        print_msg $GREEN "Cursor theme installed successfully."
-    else
-        print_msg $RED "Downloaded file is not a valid tar.xz archive."
-    fi
-else
-    print_msg $RED "Failed to download cursor theme."
-fi
+echo "Installing cursor theme..."
+wget -q https://github.com/vinceliuice/WhiteSur-cursors/releases/download/v1.0/WhiteSur-cursors.tar.xz -O cursors.tar.xz
+tar -xf cursors.tar.xz -C $CURSOR_DIR
+rm -f cursors.tar.xz
 
 # Install icons
-print_msg $YELLOW "Installing icons..."
+echo "Installing icons..."
 wget -q https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/6791955fe41d761d997a257496963514b01e7bea/01-WhiteSur.tar.xz -O icons.tar.xz
 tar -xf icons.tar.xz -C $ICON_DIR
 rm -f icons.tar.xz
@@ -62,7 +35,7 @@ declare -a theme_urls=(
 )
 
 for url in "${theme_urls[@]}"; do
-    print_msg $YELLOW "Installing theme: $(basename $url)"
+    echo "Installing theme: $(basename $url)"
     wget -q $url -O theme.tar.xz
     tar -xf theme.tar.xz -C $THEME_DIR
     rm -f theme.tar.xz
@@ -86,12 +59,12 @@ for url in "${wallpaper_urls[@]}"; do
     fi
     
     filename=$(basename $url)
-    print_msg $YELLOW "Downloading wallpaper: $filename"
+    echo "Downloading wallpaper: $filename"
     wget -q --show-progress $url -O "$WALLPAPER_DIR/$filename"
 done
 
 # Configure clock widget
-print_msg $BLUE "Creating clock widget..."
+echo "Creating clock widget..."
 cat > $GENMON_SCRIPT_DIR/clock.sh <<EOF
 #!/bin/bash
 echo "<txt> \$(date +'%a %d %b %H:%M') </txt>"
@@ -101,7 +74,6 @@ EOF
 chmod +x $GENMON_SCRIPT_DIR/clock.sh
 
 # Apply theme settings
-print_msg $BLUE "Applying theme settings..."
 xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark-solid-nord"
 xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark-solid-nord"
 xfconf-query -c xsettings -p /Net/IconThemeName -s "WhiteSur"
@@ -109,11 +81,10 @@ xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "WhiteSur-cursors"
 
 # Set wallpaper
 first_wallpaper=$(ls $WALLPAPER_DIR | head -n 1)
-print_msg $BLUE "Setting wallpaper..."
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$WALLPAPER_DIR/$first_wallpaper"
 
 # Add clock widget to panel
-print_msg $BLUE "Configuring clock widget..."
+echo "Configuring clock widget..."
 plugin_ids=$(xfconf-query -c xfce4-panel -p /plugins/plugin-ids | sed 's/[^0-9]/ /g')
 last_id=$(echo $plugin_ids | awk '{print $NF}')
 new_id=$((last_id + 1))
@@ -125,7 +96,7 @@ xfconf-query -c xfce4-panel -p /plugins/plugin-$new_id/padding -n -t int -s 5
 xfconf-query -c xfce4-panel -p /plugins/plugin-$new_id/refresh-rate -n -t int -s 1
 
 # Restart panel to apply changes
-print_msg $GREEN "Restarting panel to apply changes..."
 xfce4-panel --restart
 
-print_msg $GREEN "Installation complete! Your macOS-style theme with clock widget is ready."
+echo "Installation complete! Your macOS-style theme with clock widget is ready."
+
