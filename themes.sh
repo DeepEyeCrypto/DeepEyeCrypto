@@ -205,16 +205,16 @@ chmod +x $GENMON_SCRIPT_DIR/weather.sh
 
 # Apply theme settings with fallback
 print_msg $BLUE "Applying theme settings..."
-xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark-solid-nord"
-xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark-solid-nord"
-xfconf-query -c xsettings -p /Net/IconThemeName -s "RevengeOS-macOS" || xfconf-query -c xsettings -p /Net/IconThemeName -s "Qogir-manjaro"
-xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "macOS-Monterey"
+xfconf-query -c xsettings -p /Net/ThemeName -s "WhiteSur-Dark-solid-nord" || print_msg $RED "Failed to apply theme: WhiteSur-Dark-solid-nord"
+xfconf-query -c xfwm4 -p /general/theme -s "WhiteSur-Dark-solid-nord" || print_msg $RED "Failed to apply window manager theme: WhiteSur-Dark-solid-nord"
+xfconf-query -c xsettings -p /Net/IconThemeName -s "RevengeOS-macOS" || xfconf-query -c xsettings -p /Net/IconThemeName -s "Qogir-manjaro" || print_msg $RED "Failed to apply icon theme: RevengeOS-macOS and fallback"
+xfconf-query -c xsettings -p /Gtk/CursorThemeName -s "macOS-Monterey" || print_msg $RED "Failed to apply cursor theme: macOS-Monterey"
 
 # Set wallpaper
 first_wallpaper=$(ls $WALLPAPER_DIR | head -n 1)
 if [ -n "$first_wallpaper" ]; then
     print_msg $BLUE "Setting wallpaper..."
-    xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$WALLPAPER_DIR/$first_wallpaper"
+    xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$WALLPAPER_DIR/$first_wallpaper" || print_msg $RED "Failed to set wallpaper: $first_wallpaper"
 fi
 
 # Configure panel widgets
@@ -224,27 +224,27 @@ last_id=$(echo $plugin_ids | awk '{print $NF}')
 
 # Clock widget
 clock_id=$((last_id + 1))
-xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id
-xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id -n -t string -s "genmon"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/clock.sh"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/padding -n -t int -s 5
-xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/refresh-rate -n -t int -s 1
+xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id || print_msg $RED "Failed to add clock widget"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id -n -t string -s "genmon" || print_msg $RED "Failed to configure clock widget"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/clock.sh" || print_msg $RED "Failed to set clock widget command"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/padding -n -t int -s 5 || print_msg $RED "Failed to set clock widget padding"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$clock_id/refresh-rate -n -t int -s 1 || print_msg $RED "Failed to set clock widget refresh rate"
 
 # System monitor widget
 sysmon_id=$((last_id + 2))
-xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id -s $sysmon_id
-xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id -n -t string -s "genmon"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/sysmon.sh"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/padding -n -t int -s 5
-xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/refresh-rate -n -t int -s 5
+xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id -s $sysmon_id || print_msg $RED "Failed to add system monitor widget"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id -n -t string -s "genmon" || print_msg $RED "Failed to configure system monitor widget"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/sysmon.sh" || print_msg $RED "Failed to set system monitor widget command"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/padding -n -t int -s 5 || print_msg $RED "Failed to set system monitor widget padding"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$sysmon_id/refresh-rate -n -t int -s 5 || print_msg $RED "Failed to set system monitor widget refresh rate"
 
 # Weather widget
 weather_id=$((last_id + 3))
-xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id -s $sysmon_id -s $weather_id
-xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id -n -t string -s "genmon"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/weather.sh"
-xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/padding -n -t int -s 5
-xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/refresh-rate -n -t int -s 300
+xfconf-query -c xfce4-panel -p /plugins/plugin-ids -t int -t int -t int -t int -t int -t int -t int -t int -t int -s ${plugin_ids} -s $clock_id -s $sysmon_id -s $weather_id || print_msg $RED "Failed to add weather widget"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id -n -t string -s "genmon" || print_msg $RED "Failed to configure weather widget"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/command -n -t string -s "sh $GENMON_SCRIPT_DIR/weather.sh" || print_msg $RED "Failed to set weather widget command"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/padding -n -t int -s 5 || print_msg $RED "Failed to set weather widget padding"
+xfconf-query -c xfce4-panel -p /plugins/plugin-$weather_id/refresh-rate -n -t int -s 300 || print_msg $RED "Failed to set weather widget refresh rate"
 
 # Restart panel and desktop
 print_msg $GREEN "Restarting panel and desktop to apply changes..."
