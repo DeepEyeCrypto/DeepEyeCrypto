@@ -21,7 +21,6 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 
      > Avoid using Termux from Google Play due to API limitations.
    - **[Termux:X11](https://github.com/termux/termux-x11/releases)**
-   - **[Termux-API](https://github.com/termux/termux-api/releases)**
    - Minimum 2GB of RAM (3GB recommended)
    - 1.5-2GB of Internet data
    - 3-4GB of free storage
