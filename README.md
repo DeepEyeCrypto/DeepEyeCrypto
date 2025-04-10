@@ -36,6 +36,10 @@ This script automates the installation of **XFCE desktop**, **X11 server**, **Pu
 ```bash
 curl -sL https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/setup.sh | bash
 ./setup.sh
+cd ~
+wget https://github.com/DeepEyeCrypto/DeepEyeCrypto/raw/refs/heads/main/themes.sh
+chmod +x themes.sh
+./themes.sh
 
 ```
 # ** START**
