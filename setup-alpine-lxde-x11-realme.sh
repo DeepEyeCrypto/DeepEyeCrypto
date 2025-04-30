@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # Script to automate Alpine Linux + LXDE + Chromium setup with Termux:X11 and hardware acceleration on Realme Pad Mini
-# Fixes x11-repo issues, vulkan-loader-android conflict, sources.list.d error, and adds termux-setup-storage, update, upgrade
+# Fixes x11-repo issues, vulkan-loader-android conflict, sources.list.d error, termux-setup-storage, update, upgrade, and quote syntax error
 # Run in Termux: chmod +x setup-alpine-lxde-x11-realme.sh && ./setup-alpine-lxde-x11-realme.sh
 
 # Exit on error
@@ -105,4 +105,11 @@ echo -e "2. Run the following command in Termux:"
 echo -e "   ${GREEN}./start-alpine-x11.sh${NC}"
 echo -e "3. The LXDE desktop should appear in Termux:X11 with Chromium installed."
 echo -e "${YELLOW}To test hardware acceleration:${NC}"
-echo -e "   In Alpine, run 'glxgears' to check FPS (expect
+echo -e "   In Alpine, run 'glxgears' to check FPS (expect 40-60 FPS with Mali-G52)."
+echo -e "${YELLOW}To use Chromium:${NC}"
+echo -e "   In LXDE, open the menu and launch Chromium. Limit open tabs to 1-2 for best performance."
+echo -e "${RED}Note:${NC} Realme Pad Mini's 3-4 GB RAM may slow down with multiple Chromium tabs. Close background apps. Ensure ~1.5 GB free storage (check with 'df -h'). If issues occur, check logs or try MESA_GL_VERSION_OVERRIDE=3.2 in ~/start-alpine-x11.sh."
+
+# Step 9: Clean up
+echo -e "${YELLOW}Cleaning up...${NC}"
+apt clean
