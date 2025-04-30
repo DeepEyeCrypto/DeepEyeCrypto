@@ -1,6 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # Script to automate Alpine Linux + LXDE setup with Termux:X11 and hardware acceleration on Realme Pad Mini
+# Resolves vulkan-loader-android conflict
 # Run in Termux: chmod +x setup-alpine-lxde-x11-realme.sh && ./setup-alpine-lxde-x11-realme.sh
 
 # Exit on error
@@ -14,14 +15,20 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}Starting Alpine Linux + LXDE setup for Realme Pad Mini...${NC}"
 
-# Step 1: Update Termux and install prerequisites
-echo -e "${YELLOW}Updating Termux and installing prerequisites...${NC}"
+# Step 1: Clean up conflicting packages and update Termux
+echo -e "${YELLOW}Cleaning up conflicting packages and updating Termux...${NC}"
+apt autoclean
+apt autoremove -y
 pkg update -y && pkg upgrade -y
 pkg install -y x11-repo
 pkg install -y termux-x11-nightly pulseaudio proot-distro
 
-# Step 2: Install hardware acceleration packages
+# Step 2: Install hardware acceleration packages (avoiding vulkan-loader-generic)
 echo -e "${YELLOW}Installing VirGL and Zink for Mali-G52 GPU...${NC}"
+# Uninstall vulkan-loader-generic if present
+if pkg_install_vulkan_loader_generic=$(dpkg -l | grep vulkan-loader-generic); then
+    pkg uninstall -y vulkan-loader-generic
+fi
 pkg install -y mesa-zink virglrenderer-mesa-zink vulkan-loader-android virglrenderer-android
 
 # Step 3: Install Alpine Linux
@@ -82,7 +89,7 @@ echo -e "   ${GREEN}./start-alpine-x11.sh${NC}"
 echo -e "3. The LXDE desktop should appear in Termux:X11."
 echo -e "${YELLOW}To test hardware acceleration:${NC}"
 echo -e "   In Alpine, run 'glxgears' to check FPS (expect 40-60 FPS with Mali-G52)."
-echo -e "${RED}Note:${NC} Realme Pad Mini's Mali-G52 GPU supports Vulkan, but performance is limited. If issues occur, check logs or try MESA_GL_VERSION_OVERRIDE=3.2."
+echo -e "${RED}Note:${NC} Realme Pad Mini's Mali-G52 GPU supports Vulkan. If issues occur, check logs or try MESA_GL_VERSION_OVERRIDE=3.2 in ~/start-alpine-x11.sh."
 
 # Step 7: Clean up
 echo -e "${YELLOW}Cleaning up...${NC}"
