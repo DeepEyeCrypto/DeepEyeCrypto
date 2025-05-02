@@ -2,7 +2,7 @@
 
 # Script to automate Alpine Linux + XFCE4 + Chromium setup with Termux:X11 and hardware acceleration for all Android devices
 # Auto-detects chipset, configures GPU acceleration, includes sudo, nano, dbus-x11, user setup, startxfce4_alpine.sh
-# Fixes /sdcard permission issue, removes glinfo dependency, uses dmesg for GPU detection
+# Fixes /sdcard permission, glinfo, and startxfce4_alpine.sh copy issues
 # Run in Termux: chmod +x setup-alpine-xfce4-x11-universal.sh && ./setup-alpine-xfce4-x11-universal.sh
 
 # Exit on error
@@ -105,7 +105,7 @@ proot-distro install alpine
 
 # Step 8: Configure Alpine Linux
 echo -e "${YELLOW}Configuring Alpine Linux with XFCE4, Chromium, and user setup...${NC}" | tee -a $LOG_FILE
-proot-distro login alpine --shared-tmp << EOF
+proot-distro login alpine --shared-tmp --no-sysvipc << EOF
   # Update Alpine repositories and enable community repo
   apk update
   apk upgrade
@@ -138,7 +138,19 @@ echo -e "${YELLOW}Downloading and configuring startxfce4_alpine.sh...${NC}" | te
 wget -O $HOME/startxfce4_alpine.sh https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/proot_alpine/startxfce4_alpine.sh
 chmod +x $HOME/startxfce4_alpine.sh
 
-# Step 10: Create Termux startup script
+# Step 10: Copy startxfce4_alpine.sh to Alpine /root
+echo -e "${YELLOW}Copying startxfce4_alpine.sh to Alpine /root...${NC}" | tee -a $LOG_FILE
+if [ -f "$HOME/startxfce4_alpine.sh" ]; then
+    proot-distro login alpine --shared-tmp --no-sysvipc << EOF
+      cp $HOME/startxfce4_alpine.sh /root/startxfce4_alpine.sh
+      chmod +x /root/startxfce4_alpine.sh
+EOF
+else
+    echo -e "${RED}Error: $HOME/startxfce4_alpine.sh not found. Download failed or file missing.${NC}" | tee -a $LOG_FILE
+    exit 1
+fi
+
+# Step 11: Create Termux startup script
 echo -e "${YELLOW}Creating Termux startup script for Termux:X11 and XFCE4...${NC}" | tee -a $LOG_FILE
 cat > $HOME/start-alpine-x11.sh << START_X11
 #!/data/data/com.termux/files/usr/bin/bash
@@ -157,19 +169,24 @@ termux-x11 :0 &
 sleep 2
 
 # Run startxfce4_alpine.sh as user 'enayat'
-proot-distro login alpine --shared-tmp --user enayat -- /home/enayat/startxfce4_alpine.sh
+proot-distro login alpine --shared-tmp --no-sysvipc --user enayat -- /home/enayat/startxfce4_alpine.sh
 START_X11
 chmod +x $HOME/start-alpine-x11.sh
 
-# Step 11: Copy startxfce4_alpine.sh to user 'enayat' home directory
+# Step 12: Copy startxfce4_alpine.sh to user 'enayat' home directory
 echo -e "${YELLOW}Copying startxfce4_alpine.sh to user 'enayat' home directory...${NC}" | tee -a $LOG_FILE
-proot-distro login alpine --shared-tmp << EOF
-  cp /root/startxfce4_alpine.sh /home/enayat/startxfce4_alpine.sh
-  chown enayat:enayat /home/enayat/startxfce4_alpine.sh
-  chmod +x /home/enayat/startxfce4_alpine.sh
+proot-distro login alpine --shared-tmp --no-sysvipc << EOF
+  if [ -f /root/startxfce4_alpine.sh ]; then
+      cp /root/startxfce4_alpine.sh /home/enayat/startxfce4_alpine.sh
+      chown enayat:enayat /home/enayat/startxfce4_alpine.sh
+      chmod +x /home/enayat/startxfce4_alpine.sh
+  else
+      echo "Error: /root/startxfce4_alpine.sh not found in Alpine." >> $LOG_FILE
+      exit 1
+  fi
 EOF
 
-# Step 12: Instructions for user
+# Step 13: Instructions for user
 echo -e "${GREEN}Setup complete!${NC}" | tee -a $LOG_FILE
 echo -e "${YELLOW}To start the Alpine XFCE4 GUI with hardware acceleration:${NC}"
 echo -e "1. Install and open the Termux:X11 app from F-Droid."
@@ -187,6 +204,6 @@ echo -e "   Username: enayat"
 echo -e "   Password: password123 (change with 'passwd' after login)"
 echo -e "${RED}Note:${NC} Your device's $TOTAL_RAM MB RAM may slow down with multiple tabs or XFCE4. Close background apps. Ensure ~1.5-2 GB free storage (check with 'df -h'). Logs saved to $LOG_FILE. If issues occur, try MESA_GL_VERSION_OVERRIDE=3.2 in /root/start-xfce4.sh."
 
-# Step 13: Clean up
+# Step 14: Clean up
 echo -e "${YELLOW}Cleaning up...${NC}" | tee -a $LOG_FILE
 apt clean
