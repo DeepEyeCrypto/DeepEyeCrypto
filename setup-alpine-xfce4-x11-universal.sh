@@ -2,6 +2,7 @@
 
 # Script to automate Alpine Linux + XFCE4 + Chromium setup with Termux:X11 and hardware acceleration for all Android devices
 # Auto-detects chipset, configures GPU acceleration, includes sudo, nano, dbus-x11, user setup, startxfce4_alpine.sh
+# Fixes /sdcard permission issue by using $HOME/termux_setup.log
 # Run in Termux: chmod +x setup-alpine-xfce4-x11-universal.sh && ./setup-alpine-xfce4-x11-universal.sh
 
 # Exit on error
@@ -13,8 +14,8 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Log file
-LOG_FILE="/sdcard/termux_setup.log"
+# Log file (use $HOME to avoid /sdcard permission issues)
+LOG_FILE="$HOME/termux_setup.log"
 echo "Setup started: $(date)" > $LOG_FILE
 
 echo -e "${GREEN}Starting Alpine Linux + XFCE4 + Chromium setup for your device...${NC}"
@@ -22,7 +23,13 @@ echo -e "${GREEN}Starting Alpine Linux + XFCE4 + Chromium setup for your device.
 # Step 1: Setup storage permissions
 echo -e "${YELLOW}Setting up storage permissions...${NC}" | tee -a $LOG_FILE
 termux-setup-storage
-sleep 2  # Wait for permissions to be applied
+sleep 5  # Extended wait for permissions to be applied
+# Verify storage access
+if ! touch /sdcard/termux_test.txt 2>/dev/null; then
+    echo -e "${YELLOW}Warning: Cannot write to /sdcard. Logs will be saved to $LOG_FILE instead.${NC}" | tee -a $LOG_FILE
+else
+    rm /sdcard/termux_test.txt
+fi
 
 # Step 2: Check RAM and storage
 echo -e "${YELLOW}Checking RAM and storage...${NC}" | tee -a $LOG_FILE
@@ -119,7 +126,6 @@ export GALLIUM_DRIVER=$GALLIUM_DRIVER
 export MESA_GL_VERSION_OVERRIDE=$GL_VERSION
 startxfce4
 START_XFCE4
-  THEY
   chmod +x /root/start-xfce4.sh
 EOF
 
@@ -137,7 +143,7 @@ cat > $HOME/start-alpine-x11.sh << START_X11
 pulseaudio --start
 
 # Start VirGL server with Zink
-MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=$GL_VERSION MESA_GLES_VERSION_OVERRIDE=3.2 \
+MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=$GL_VERSION MESA_GLES_VERSION_OVERRIDE=3.2 \\
 GALLIUM_DRIVER=$GALLIUM_DRIVER ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &
 
 # Start Termux:X11
