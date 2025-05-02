@@ -2,7 +2,7 @@
 
 # Script to automate Alpine Linux + XFCE4 + Chromium setup with Termux:X11 and hardware acceleration for all Android devices
 # Auto-detects chipset, configures GPU acceleration, includes sudo, nano, dbus-x11, user setup, startxfce4_alpine.sh
-# Fixes /sdcard permission issue by using $HOME/termux_setup.log
+# Fixes /sdcard permission issue, removes glinfo dependency, uses dmesg for GPU detection
 # Run in Termux: chmod +x setup-alpine-xfce4-x11-universal.sh && ./setup-alpine-xfce4-x11-universal.sh
 
 # Exit on error
@@ -49,7 +49,11 @@ CHIPSET=$(lscpu | grep "Model name" | awk -F: '{print $2}' | xargs)
 if [ -z "$CHIPSET" ]; then
     CHIPSET=$(cat /proc/cpuinfo | grep "Hardware" | awk -F: '{print $2}' | xargs)
 fi
-GPU_INFO=$(glinfo 2>/dev/null | grep "Renderer" | awk -F: '{print $2}' | xargs || echo "Unknown")
+# Use dmesg to detect GPU (fallback to Unknown if not found)
+GPU_INFO=$(dmesg | grep -iE 'mali|adreno|powervr' | head -n 1 | awk '{print $NF}' | xargs || echo "Unknown")
+if [ "$GPU_INFO" = "Unknown" ]; then
+    GPU_INFO=$(cat /proc/cpuinfo | grep -iE 'mali|adreno|powervr' | head -n 1 | awk '{print $NF}' | xargs || echo "Unknown")
+fi
 echo -e "${GREEN}Detected Chipset: $CHIPSET${NC}" | tee -a $LOG_FILE
 echo -e "${GREEN}Detected GPU: $GPU_INFO${NC}" | tee -a $LOG_FILE
 
@@ -83,7 +87,7 @@ echo -e "${YELLOW}Cleaning up conflicting packages and updating Termux...${NC}" 
 apt autoclean
 apt autoremove -y
 pkg update -y && pkg upgrade -y
-pkg install -y x11-repo termux-x11-nightly pulseaudio proot-distro wget glinfo
+pkg install -y x11-repo termux-x11-nightly pulseaudio proot-distro wget
 
 # Step 6: Install hardware acceleration packages
 echo -e "${YELLOW}Installing VirGL and Zink for GPU acceleration...${NC}" | tee -a $LOG_FILE
