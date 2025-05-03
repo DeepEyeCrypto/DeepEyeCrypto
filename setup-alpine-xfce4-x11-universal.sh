@@ -2,7 +2,7 @@
 
 # Script to automate Alpine Linux + XFCE4 + Chromium setup with Termux:X11 and hardware acceleration for all Android devices
 # Auto-detects chipset, configures GPU acceleration, includes sudo, nano, dbus-x11, user setup
-# Removes startxfce4_alpine.sh dependency, integrates XFCE4 startup, fixes previous issues
+# Removes startxfce4_alpine.sh dependency, fixes /sdcard, glinfo, file copy issues, suppresses proot warnings
 # Run in Termux: chmod +x setup-alpine-xfce4-x11-universal.sh && ./setup-alpine-xfce4-x11-universal.sh
 
 # Exit on error
@@ -105,7 +105,7 @@ proot-distro install alpine
 
 # Step 8: Configure Alpine Linux
 echo -e "${YELLOW}Configuring Alpine Linux with XFCE4, Chromium, and user setup...${NC}" | tee -a $LOG_FILE
-proot-distro login alpine --shared-tmp --no-sysvipc << EOF
+proot-distro login alpine --shared-tmp --no-sysvipc 2>/dev/null << EOF
   # Update Alpine repositories and enable community repo
   apk update
   apk upgrade
@@ -155,13 +155,13 @@ termux-x11 :0 &
 sleep 2
 
 # Run XFCE4 as user 'enayat'
-proot-distro login alpine --shared-tmp --no-sysvipc --user enayat -- /home/enayat/start-xfce4.sh
+proot-distro login alpine --shared-tmp --no-sysvipc --user enayat -- /home/enayat/start-xfce4.sh 2>/dev/null
 START_X11
 chmod +x $HOME/start-alpine-x11.sh
 
 # Step 10: Verify XFCE4 installation
 echo -e "${YELLOW}Verifying XFCE4 installation...${NC}" | tee -a $LOG_FILE
-proot-distro login alpine --shared-tmp --no-sysvipc << EOF
+proot-distro login alpine --shared-tmp --no-sysvipc 2>/dev/null << EOF
   if ! command -v startxfce4 >/dev/null; then
       echo "Error: XFCE4 not installed properly." >> $LOG_FILE
       exit 1
@@ -174,6 +174,7 @@ proot-distro login alpine --shared-tmp --no-sysvipc << EOF
       echo "Error: /home/enayat/start-xfce4.sh not created." >> $LOG_FILE
       exit 1
   fi
+  echo "XFCE4, user 'enayat', and start-xfce4.sh verified successfully." >> $LOG_FILE
 EOF
 
 # Step 11: Instructions for user
