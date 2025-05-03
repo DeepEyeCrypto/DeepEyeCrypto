@@ -75,18 +75,36 @@ check_status
 # Install termux-x11-nightly with retry logic
 echo -e "${BLUE}Installing termux-x11-nightly...${NC}" | tee -a "$LOG_FILE"
 MAX_RETRIES=3
+BACKOFF_DELAY=5
+
 for ((i = 1; i <= MAX_RETRIES; i++)); do
+    echo -e "${YELLOW}Attempt $i of $MAX_RETRIES...${NC}" | tee -a "$LOG_FILE"
     pkg install termux-x11-nightly -y
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}termux-x11-nightly installed successfully!${NC}" | tee -a "$LOG_FILE"
         break
     else
-        echo -e "${YELLOW}Attempt $i failed. Retrying...${NC}" | tee -a "$LOG_FILE"
+        echo -e "${RED}Attempt $i failed.${NC}" | tee -a "$LOG_FILE"
+        if [ $i -lt $MAX_RETRIES ]; then
+            echo -e "${YELLOW}Retrying in $BACKOFF_DELAY seconds...${NC}" | tee -a "$LOG_FILE"
+            sleep $BACKOFF_DELAY
+            BACKOFF_DELAY=$((BACKOFF_DELAY * 2))  # Exponential backoff
+        fi
     fi
 done
 
 if [ $i -gt $MAX_RETRIES ]; then
     echo -e "${RED}Failed to install termux-x11-nightly after $MAX_RETRIES attempts.${NC}" | tee -a "$LOG_FILE"
+    echo -e "${YELLOW}Manual Troubleshooting Steps:${NC}" | tee -a "$LOG_FILE"
+    echo -e "1. Ensure you have a stable internet connection.\n" | tee -a "$LOG_FILE"
+    echo -e "2. Verify the Termux X11 repository is configured correctly by running:\n" | tee -a "$LOG_FILE"
+    echo -e "   ${BLUE}pkg install x11-repo && pkg update${NC}\n" | tee -a "$LOG_FILE"
+    echo -e "3. Try switching mirrors using:\n" | tee -a "$LOG_FILE"
+    echo -e "   ${BLUE}termux-change-repo${NC}\n" | tee -a "$LOG_FILE"
+    echo -e "4. Search for available packages:\n" | tee -a "$LOG_FILE"
+    echo -e "   ${BLUE}apt search termux-x11${NC}\n" | tee -a "$LOG_FILE"
+    echo -e "5. Visit the Termux X11 GitHub repository for manual installation:\n" | tee -a "$LOG_FILE"
+    echo -e "   ${BLUE}https://github.com/termux/termux-x11${NC}\n" | tee -a "$LOG_FILE"
     exit 1
 fi
 check_status
