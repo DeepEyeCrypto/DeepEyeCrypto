@@ -1,166 +1,151 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/bin/bash
 
-# Script to set up LXDE on Debian proot-distro with X11, GPU acceleration, Zsh, and a theme.
+# Unofficial Bash Strict Mode
+set -euo pipefail
+IFS=$'\n\t'
 
-# Constants
+# Color definitions for messages
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
-USERNAME="lxdeuser"
 
-# Exit on error
-set -e
+# Log file for debugging
+LOG_FILE="$HOME/termux_setup.log"
+exec 2>>"$LOG_FILE"
 
-# Log messages with timestamps
+# Temporary directory for setup
+TEMP_DIR=$(mktemp -d)
+
+# Centralized logging function
 log() {
-    echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"
+    local level="$1"
+    shift
+    echo "[$level] $*" | tee -a "$LOG_FILE"
 }
 
-# Error handler
-error_exit() {
-    echo -e "${RED}Error: $1${NC}"
-    exit 1
-}
-
-# Check and install Termux prerequisites
-install_prerequisites() {
-    log "Checking and installing prerequisites..."
-    pkg update -y && pkg upgrade -y
-    for pkg in x11-repo termux-x11-nightly pulseaudio proot-distro wget git tur-repo \
-                mesa-zink virglrenderer-mesa-zink vulkan-loader-android virglrenderer-android; do
-        if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-            log "Installing $pkg..."
-            pkg install -y "$pkg" || error_exit "Failed to install $pkg"
-        fi
-    done
-}
-
-# Detect chipset for GPU optimization
-detect_chipset() {
-    log "Detecting chipset..."
-    CHIPSET=$(getprop ro.hardware)
-    GPU=$(getprop ro.hardware.gpu)
-
-    if [[ "$CHIPSET" == *"qcom"* || "$GPU" == *"adreno"* ]]; then
-        DRIVER="zink"
-        log "Qualcomm Adreno GPU detected. Using Zink (Vulkan) for acceleration."
-        if [[ "$GPU" == *"adreno"* ]]; then
-            install_turnip_driver
-        fi
+# Function to print status messages
+print_status() {
+    local status="$1"
+    local message="$2"
+    if [ "$status" = "ok" ]; then
+        echo -e "${GREEN}✓${NC} $message"
+    elif [ "$status" = "warn" ]; then
+        echo -e "${YELLOW}!${NC} $message"
     else
-        DRIVER="virpipe"
-        log "Non-Qualcomm chipset detected. Falling back to VirGL for acceleration."
+        echo -e "${RED}✗${NC} $message"
     fi
 }
 
-# Install Turnip driver for Adreno GPUs
-install_turnip_driver() {
-    log "Installing Turnip driver for Adreno GPU..."
-    wget -q https://github.com/MatrixhKa/mesa-turnip/releases/download/24.1.0/mesa-turnip-kgsl-24.1.0-devel.zip -O turnip.zip
-    unzip -q turnip.zip -d turnip
-    sudo mv turnip/libvulkan_freedreno.so /usr/lib/
-    sudo mv turnip/freedreno_icd.aarch64.json /usr/share/vulkan/icd.d/
-    rm -rf turnip turnip.zip
-    log "Turnip driver installed successfully."
-}
-
-# Install Debian proot-distro
-install_debian_proot() {
-    log "Installing Debian proot-distro..."
-    if ! proot-distro list | grep -q "debian"; then
-        proot-distro install debian || error_exit "Failed to install Debian."
-    else
-        log "Debian is already installed."
+# Function to clean up on exit
+finish() {
+    local ret=$?
+    if [ $ret -ne 0 ] && [ $ret -ne 130 ]; then
+        log "ERROR" "An issue occurred. Please check $LOG_FILE for details."
     fi
+    rm -rf "$TEMP_DIR"
+}
+trap finish EXIT
+
+# Safe execution wrapper
+safe_run() {
+    "$@" || {
+        log "ERROR" "Command failed: $*"
+        exit 1
+    }
 }
 
-# Set up Debian user and install LXDE
-setup_debian() {
-    log "Creating user $USERNAME in Debian and installing LXDE..."
-    proot-distro login debian --user root -- bash -c "
-        useradd -m -s /bin/bash $USERNAME && echo '$USERNAME:password' | chpasswd;
-        apt update && apt upgrade -y;
-        apt install -y lxde dbus-x11 x11-xserver-utils mesa-utils;
-    " || error_exit "Failed to set up Debian."
+# Detect system compatibility
+detect_termux() {
+    local errors=0
+    echo -e "\n${BLUE}System Compatibility Check${NC}\n"
+
+    # Check if running on Android
+    if [[ "$(uname -o)" = "Android" ]]; then
+        print_status "ok" "Running on Android $(getprop ro.build.version.release)"
+    else
+        print_status "error" "Not running on Android"
+        ((errors++))
+    fi
+
+    # Check architecture
+    local arch=$(uname -m)
+    if [[ "$arch" = "aarch64" ]]; then
+        print_status "ok" "Architecture: $arch"
+    else
+        print_status "error" "Unsupported architecture: $arch (requires aarch64)"
+        ((errors++))
+    fi
+
+    # Check for Termux PREFIX directory
+    if [[ -d "$PREFIX" ]]; then
+        print_status "ok" "Termux PREFIX directory found"
+    else
+        print_status "error" "Termux PREFIX directory not found"
+        ((errors++))
+    fi
+
+    # Check available storage space
+    local free_space=$(df "$HOME" | awk 'NR==2 {print $4}')
+    if [[ $free_space -ge 4194304 ]]; then
+        print_status "ok" "Available storage: ${free_space}KB"
+    else
+        print_status "warn" "Low storage space: ${free_space}KB (4GB recommended)"
+    fi
+
+    # Check RAM
+    local total_ram=$(free -m | awk 'NR==2 {print $2}')
+    if [[ $total_ram -ge 2048 ]]; then
+        print_status "ok" "RAM: ${total_ram}MB"
+    else
+        print_status "warn" "Low RAM: ${total_ram}MB (2GB recommended)"
+    fi
+
+    return $errors
 }
 
-# Create LXDE start script
-create_start_script() {
-    log "Creating LXDE start script..."
-    cat > startlxde_debian.sh << EOL
-#!/data/data/com.termux/files/usr/bin/bash
-
-# Start pulseaudio for sound
-pulseaudio --start
-
-# Start Termux X11
-termux-x11 :0 &
-
-# Wait for X11 to start
-sleep 2
-
-# Start virgl_test_server for hardware acceleration
-if [ "$DRIVER" = "zink" ]; then
-    MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 \
-    GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &
-else
-    GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 virgl_test_server --use-egl-surfaceless &
-fi
-
-# Login to Debian proot-distro and start LXDE
-proot-distro login debian --user $USERNAME --shared-tmp -- bash -c "
-    export DISPLAY=:0
-    export PULSE_SERVER=tcp:127.0.0.1:4713
-    GALLIUM_DRIVER=$DRIVER MESA_GL_VERSION_OVERRIDE=4.0 dbus-launch --exit-with-session startlxde
-"
-EOL
-    chmod +x startlxde_debian.sh
+# GPU detection and optimization
+gpu_check() {
+    local gpu_info=$(getprop ro.hardware.egl 2>/dev/null || echo "unknown")
+    case $gpu_info in
+        *adreno*) log "INFO" "Adreno GPU detected";;
+        *mali*) log "INFO" "Mali GPU detected";;
+        *powervr*) log "INFO" "PowerVR GPU detected";;
+        *intel*) log "INFO" "Intel GPU detected";;
+        *) log "ERROR" "Unknown GPU type: $gpu_info"; exit 1;;
+    esac
 }
 
-# Install Zsh and configure theme
-install_zsh_with_theme() {
-    log "Installing Zsh and configuring Oh-My-Zsh with a theme..."
-
-    # Install Zsh
-    pkg install -y zsh || error_exit "Failed to install Zsh."
-
-    # Install Oh-My-Zsh
-    log "Installing Oh-My-Zsh..."
-    sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended || error_exit "Failed to install Oh-My-Zsh."
-
-    # Set Zsh as the default shell for the Termux user
-    chsh -s zsh
-
-    # Install a theme (e.g., 'agnoster' or 'powerlevel10k')
-    log "Setting up Zsh theme..."
-    sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/g' ~/.zshrc || error_exit "Failed to configure Zsh theme."
-
-    # Optionally, install Powerlevel10k for advanced configuration
-    log "Installing Powerlevel10k theme..."
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-    sed -i 's/ZSH_THEME="agnoster"/ZSH_THEME="powerlevel10k\/powerlevel10k"/g' ~/.zshrc || error_exit "Failed to configure Powerlevel10k theme."
-
-    log "${GREEN}Zsh and theme setup complete! Restart the terminal to apply changes.${NC}"
+# Install dependencies in parallel
+install_dependencies() {
+    local deps=('wget' 'proot-distro' 'x11-repo' 'tur-repo' 'pulseaudio' 'git')
+    printf "%s\n" "${deps[@]}" | xargs -n 1 -P 4 pkg install -y
 }
 
-# Clean up
-cleanup() {
-    log "Cleaning up temporary files..."
-    apt clean
-    proot-distro login debian --user root -- bash -c "apt clean"
-}
-
-# Main execution
+# Main installation function
 main() {
-    install_prerequisites
-    detect_chipset
-    install_debian_proot
-    setup_debian
-    create_start_script
-    install_zsh_with_theme
-    cleanup
-    log "${GREEN}Setup complete! Run ./startlxde_debian.sh to start LXDE.${NC}"
+    clear
+    echo -e "\n${BLUE}XFCE Desktop Installation${NC}\n"
+
+    # Check system compatibility
+    if ! detect_termux; then
+        log "ERROR" "System requirements not met. Exiting."
+        exit 1
+    fi
+
+    log "INFO" "Installing dependencies..."
+    install_dependencies
+
+    log "INFO" "Setting up GPU optimizations..."
+    gpu_check
+
+    log "INFO" "Installing XFCE packages..."
+    local xfce_packages=('xfce4' 'xfce4-goodies' 'xfce4-pulseaudio-plugin' 'firefox' 'starship' 'termux-x11-nightly')
+    printf "%s\n" "${xfce_packages[@]}" | xargs -n 1 -P 4 pkg install -y
+
+    log "INFO" "Installation complete! Use 'start' to launch your desktop environment."
 }
 
+# Start installation
 main
